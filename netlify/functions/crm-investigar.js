@@ -84,7 +84,7 @@ Busca en internet información real y actual. Devuelve solo el JSON.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
+        max_tokens: 1800,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }]
@@ -98,7 +98,12 @@ Busca en internet información real y actual. Devuelve solo el JSON.`;
     const start = textBlocks.indexOf('{');
     const end = textBlocks.lastIndexOf('}');
     if (start === -1 || end === -1 || end < start) throw new Error('El agente no devolvió un JSON válido');
-    const result = JSON.parse(textBlocks.slice(start, end + 1));
+    let result;
+    try {
+      result = JSON.parse(textBlocks.slice(start, end + 1));
+    } catch (parseErr) {
+      throw new Error('La respuesta del agente se cortó a medias. Vuelve a pulsar "Investigar cliente", suele funcionar al reintentar.');
+    }
 
     if (result.nombre_correcto) c.nombre = result.nombre_correcto;
     if (result.direccion) c.direccion = result.direccion;
