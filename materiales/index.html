@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Gráficas Mera — Materiales y especificaciones</title>
+<link rel="icon" href="../crm/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="../crm/images/icon-180.png">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --steel-950:#0d0d0d; --steel-900:#161616; --steel-850:#1c1c1c; --steel-800:#242424;
+    --steel-700:#333333; --line:#2c2c2c;
+    --paper:#f5f5f2; --paper-dim:#a8a8a4; --ink:#d93395; --ink-dim:#a12571;
+    --cyan:#5effaf; --cyan-dim:#204a38;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{background:var(--steel-950);color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.display{font-family:'Archivo Black',sans-serif;letter-spacing:-.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  #loginScreen{height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  #loginBox{width:100%;max-width:340px;text-align:center;}
+  #loginBox .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:10px;}
+  #loginBox h1{font-size:21px;margin:0 0 26px;}
+  #loginBox input{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:12px 14px;color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;text-align:center;margin-bottom:12px;padding-right:44px;}
+  #loginBox input:focus{outline:none;border-color:var(--ink-dim);}
+  #loginBox button{width:100%;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;}
+  #loginBox button:hover{background:#f04dae;}
+  #loginError{color:#e79a86;font-size:12.5px;margin-top:12px;min-height:16px;}
+
+  #app{display:none;max-width:1000px;margin:0 auto;padding:30px 20px 80px;}
+  #app.ready{display:block;}
+
+  #topBar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+  #topBar .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:6px;}
+  #topBar h1{font-size:22px;margin:0 0 4px;}
+  #topBar .sub{font-size:12.5px;color:var(--paper-dim);}
+  #topBar a.backLink{color:var(--paper-dim);font-size:12.5px;text-decoration:none;border:1px solid var(--line);padding:7px 12px;border-radius:3px;}
+  #topBar a.backLink:hover{border-color:var(--ink-dim);color:var(--paper);}
+
+  #controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;}
+  #searchInput{flex:1;min-width:180px;background:var(--steel-850);border:1px solid var(--line);color:var(--paper);padding:10px 12px;border-radius:3px;font-size:13.5px;font-family:'Inter',sans-serif;}
+  #searchInput:focus{outline:none;border-color:var(--ink-dim);}
+  #categoryFilter{background:var(--steel-850);border:1px solid var(--line);color:var(--paper);padding:10px 12px;border-radius:3px;font-size:13.5px;font-family:'Inter',sans-serif;}
+  #addBtn{background:var(--ink);color:#fff;border:none;border-radius:3px;padding:10px 16px;font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap;}
+  #addBtn:hover{background:#f04dae;}
+
+  #emptyList{padding:50px 20px;text-align:center;color:var(--paper-dim);font-size:13px;line-height:1.6;}
+
+  #grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{background:var(--steel-900);border:1px solid var(--line);border-radius:5px;padding:16px 18px;}
+  .card .cardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .card h3{font-size:16px;margin:0 0 4px;color:var(--paper);font-family:'Inter',sans-serif;font-weight:700;}
+  .card .cat{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--cyan-dim);color:#c3f5dd;padding:2px 8px;border-radius:20px;}
+  .card .cat.empty{background:var(--steel-800);color:var(--paper-dim);}
+  .card .cardBtns{display:flex;gap:6px;flex-shrink:0;}
+  .card .iconBtn{background:none;border:1px solid var(--line);color:var(--paper-dim);border-radius:3px;padding:5px 8px;cursor:pointer;font-size:12px;}
+  .card .iconBtn:hover{border-color:var(--ink-dim);color:var(--paper);}
+  .card label{display:block;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--paper-dim);margin:10px 0 3px;}
+  .card .val{font-size:13.5px;color:var(--paper);line-height:1.55;white-space:pre-wrap;}
+  .card .val.empty{color:var(--paper-dim);font-style:italic;font-size:12.5px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(8,9,10,.7);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--steel-900);border:1px solid var(--line);border-radius:6px;width:100%;max-width:520px;padding:26px;max-height:88vh;overflow-y:auto;}
+  .modal h3{margin:0 0 18px;font-size:19px;color:var(--paper);}
+  .modal .fld{margin-bottom:14px;}
+  .modal .fld label{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:5px;}
+  .modal .fld input, .modal .fld select, .modal .fld textarea{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:9px 11px;color:var(--paper);font-family:'Inter',sans-serif;font-size:13.5px;resize:vertical;}
+  .modal .fld textarea{min-height:80px;line-height:1.5;}
+  .modal .fld input:focus, .modal .fld select:focus, .modal .fld textarea:focus{outline:none;border-color:var(--ink-dim);}
+  .modalBtns{display:flex;justify-content:space-between;gap:8px;margin-top:18px;}
+  .modalBtns .right{display:flex;gap:8px;}
+  button.action{font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;border-radius:3px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--steel-850);color:var(--paper);}
+  button.action:hover{border-color:var(--ink-dim);}
+  button.action.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  button.action.primary:hover{background:#f04dae;}
+  button.action.danger{color:#e79a86;}
+  button.action.danger:hover{border-color:var(--ink);}
+
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--steel-800);border:1px solid var(--ink-dim);color:var(--paper);
+    padding:11px 18px;border-radius:4px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;z-index:100;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width: 720px){
+    #grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div id="loginBox">
+    <div class="eyebrow">Gráficas Mera</div>
+    <h1 class="display">Materiales y especificaciones</h1>
+    <div style="position:relative;">
+      <input id="loginInput" type="password" placeholder="Contraseña de acceso" autocomplete="current-password">
+      <button type="button" onclick="togglePasswordVisibility()" aria-label="Mostrar contraseña"
+        style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--paper-dim);width:auto;font-size:16px;line-height:1;">
+        <span id="eyeIcon">👁</span>
+      </button>
+    </div>
+    <button onclick="tryLogin()">Entrar</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="topBar">
+    <div>
+      <div class="eyebrow">Gráficas Mera · A Coruña</div>
+      <h1 class="display">Materiales y especificaciones</h1>
+      <div class="sub">Chuleta de referencia técnica — sin precios, solo especificaciones</div>
+    </div>
+    <a class="backLink" href="../crm/">← Volver al CRM</a>
+  </div>
+
+  <div id="controls">
+    <input id="searchInput" placeholder="Buscar material...">
+    <select id="categoryFilter">
+      <option value="">Todas las categorías</option>
+      <option value="Láser">Láser</option>
+      <option value="Rotulación">Rotulación</option>
+      <option value="Merchandising">Merchandising</option>
+      <option value="Imprenta">Imprenta</option>
+      <option value="Textil">Textil</option>
+      <option value="General">General</option>
+    </select>
+    <button id="addBtn">+ Añadir material</button>
+  </div>
+
+  <div id="grid"></div>
+</div>
+
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Nuevo material</h3>
+    <div class="fld"><label>Nombre *</label><input id="f_nombre" placeholder="Ej. Metacrilato 3mm"></div>
+    <div class="fld">
+      <label>Categoría</label>
+      <select id="f_categoria">
+        <option value="">Sin categoría</option>
+        <option value="Láser">Láser</option>
+        <option value="Rotulación">Rotulación</option>
+        <option value="Merchandising">Merchandising</option>
+        <option value="Imprenta">Imprenta</option>
+        <option value="Textil">Textil</option>
+        <option value="General">General</option>
+      </select>
+    </div>
+    <div class="fld"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Grosores disponibles, formatos/tamaños estándar, acabados, colores, compatibilidad de impresión..."></textarea></div>
+    <div class="fld"><label>Notas</label><textarea id="f_notas" placeholder="Notas técnicas, proveedores, tiempos de producción..."></textarea></div>
+    <div class="modalBtns">
+      <button class="action danger" id="deleteBtn" style="display:none;" onclick="deleteMaterial()">Eliminar</button>
+      <div class="right">
+        <button class="action" onclick="closeModal()">Cancelar</button>
+        <button class="action primary" onclick="submitMaterial()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const FN_MATERIALES = '/.netlify/functions/gm-materiales';
+let materiales = [];
+let crmPassword = null;
+let editingId = null;
+
+// ---------- LOGIN ----------
+function togglePasswordVisibility(){
+  const input = document.getElementById('loginInput');
+  const icon = document.getElementById('eyeIcon');
+  if(input.type === 'password'){ input.type = 'text'; icon.textContent = '🙈'; }
+  else { input.type = 'password'; icon.textContent = '👁'; }
+}
+function tryLogin(){
+  const val = document.getElementById('loginInput').value;
+  if(!val) return;
+  crmPassword = val;
+  attemptLoad(true);
+}
+document.getElementById('loginInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+async function attemptLoad(fromLoginForm){
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = fromLoginForm ? 'Comprobando...' : '';
+  try{
+    const r = await fetch(FN_MATERIALES, { headers: { 'x-crm-password': crmPassword } });
+    if(r.status === 401){
+      errEl.textContent = 'Contraseña incorrecta.';
+      localStorage.removeItem('gm_crm_pass');
+      return;
+    }
+    if(!r.ok) throw new Error('Error del servidor');
+    const data = await r.json();
+    materiales = data.materiales || [];
+    localStorage.setItem('gm_crm_pass', crmPassword);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').classList.add('ready');
+    renderGrid();
+  }catch(err){
+    errEl.textContent = 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.';
+  }
+}
+(function initLogin(){
+  const saved = localStorage.getItem('gm_crm_pass');
+  if(saved){ crmPassword = saved; attemptLoad(false); }
+})();
+
+// ---------- HELPERS ----------
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function escapeHtml(s){
+  return (s||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+async function apiCall(method, payload){
+  const r = await fetch(FN_MATERIALES, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ password: crmPassword }, payload || {}))
+  });
+  if(r.status === 401){ showToast('Sesión no autorizada. Vuelve a entrar.'); localStorage.removeItem('gm_crm_pass'); location.reload(); throw new Error('401'); }
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
+
+// ---------- GRID ----------
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  const filtered = materiales.filter(m=>{
+    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q);
+    const matchCat = !cat || m.categoria === cat;
+    return matchQ && matchCat;
+  });
+  if(filtered.length===0){
+    grid.innerHTML = `<div id="emptyList" style="grid-column:1/-1;">${materiales.length===0 ? 'Todavía no hay materiales. Añade el primero con "+ Añadir material".' : 'Sin resultados para ese filtro.'}</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(m=>`
+    <div class="card">
+      <div class="cardTop">
+        <div>
+          <h3>${escapeHtml(m.nombre)}</h3>
+          <span class="cat ${m.categoria?'':'empty'}">${escapeHtml(m.categoria || 'Sin categoría')}</span>
+        </div>
+        <div class="cardBtns">
+          <button class="iconBtn" onclick="openEdit('${m.id}')">Editar</button>
+        </div>
+      </div>
+      <label>Especificaciones</label>
+      <div class="val ${m.especificaciones?'':'empty'}">${m.especificaciones ? escapeHtml(m.especificaciones) : 'Sin especificaciones todavía.'}</div>
+      ${m.notas ? `<label>Notas</label><div class="val">${escapeHtml(m.notas)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ---------- MODAL ----------
+function openModal(){
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Nuevo material';
+  document.getElementById('f_nombre').value = '';
+  document.getElementById('f_categoria').value = '';
+  document.getElementById('f_especificaciones').value = '';
+  document.getElementById('f_notas').value = '';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('f_nombre').focus(),50);
+}
+function openEdit(id){
+  const m = materiales.find(x=>x.id===id);
+  if(!m) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Editar material';
+  document.getElementById('f_nombre').value = m.nombre || '';
+  document.getElementById('f_categoria').value = m.categoria || '';
+  document.getElementById('f_especificaciones').value = m.especificaciones || '';
+  document.getElementById('f_notas').value = m.notas || '';
+  document.getElementById('deleteBtn').style.display = 'inline-block';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+
+async function submitMaterial(){
+  const nombre = document.getElementById('f_nombre').value.trim();
+  if(!nombre){ showToast('El nombre es obligatorio.'); return; }
+  const payload = {
+    nombre,
+    categoria: document.getElementById('f_categoria').value,
+    especificaciones: document.getElementById('f_especificaciones').value.trim(),
+    notas: document.getElementById('f_notas').value.trim()
+  };
+  try{
+    if(editingId){
+      const data = await apiCall('PUT', { id: editingId, patch: payload });
+      const idx = materiales.findIndex(x=>x.id===editingId);
+      if(idx>-1) materiales[idx] = data.material;
+      showToast('Material actualizado.');
+    } else {
+      const data = await apiCall('POST', { material: payload });
+      materiales.unshift(data.material);
+      showToast('Material añadido.');
+    }
+    closeModal();
+    renderGrid();
+  }catch(err){ showToast('No se pudo guardar: ' + err.message); }
+}
+
+async function deleteMaterial(){
+  if(!editingId) return;
+  if(!confirm('¿Eliminar este material? No se puede deshacer.')) return;
+  try{
+    await apiCall('DELETE', { id: editingId });
+    materiales = materiales.filter(x=>x.id!==editingId);
+    closeModal();
+    renderGrid();
+    showToast('Material eliminado.');
+  }catch(err){ showToast('No se pudo eliminar: ' + err.message); }
+}
+
+// ---------- INIT ----------
+document.getElementById('addBtn').addEventListener('click', openModal);
+document.getElementById('searchInput').addEventListener('input', renderGrid);
+document.getElementById('categoryFilter').addEventListener('change', renderGrid);
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+</script>
+</body>
+</html>
