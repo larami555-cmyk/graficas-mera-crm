@@ -61,6 +61,9 @@
   .card .cardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
   .card h3{font-size:16px;margin:0 0 4px;color:var(--paper);font-family:'Inter',sans-serif;font-weight:700;}
   .card .cat{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--cyan-dim);color:var(--cyan-text);padding:2px 8px;border-radius:20px;}
+  .chipRow{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{display:inline-block;background:var(--steel-800);border:1px solid var(--line);color:var(--paper);font-size:12px;padding:4px 10px;border-radius:20px;}
+  .chip.gm{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan-text);}
   .card .cat.empty{background:var(--steel-800);color:var(--paper-dim);}
   .card .cardBtns{display:flex;gap:6px;flex-shrink:0;}
   .card .iconBtn{background:none;border:1px solid var(--line);color:var(--paper-dim);border-radius:3px;padding:5px 8px;cursor:pointer;font-size:12px;}
@@ -80,6 +83,10 @@
   .modal .fld input:focus, .modal .fld select:focus, .modal .fld textarea:focus{outline:none;border-color:var(--ink-dim);}
   .modalBtns{display:flex;justify-content:space-between;gap:8px;margin-top:18px;}
   .modalBtns .right{display:flex;gap:8px;}
+
+  .checkChip{display:flex;align-items:center;gap:5px;background:var(--steel-850);border:1px solid var(--line);border-radius:20px;padding:5px 11px;font-size:12.5px;cursor:pointer;user-select:none;}
+  .checkChip input{margin:0;}
+  .checkChip.checked{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan-text);}
   button.action{font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;border-radius:3px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--steel-850);color:var(--paper);}
   button.action:hover{border-color:var(--ink-dim);}
   button.action.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
@@ -122,6 +129,7 @@
       <div class="sub">Chuleta de referencia técnica — sin precios, solo especificaciones</div>
     </div>
     <a class="backLink" href="../crm/">← Volver al CRM</a>
+    <button class="action" style="margin-left:8px;" onclick="exportarCopia()">⬇ Exportar copia</button>
   </div>
 
   <div id="tabs" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
@@ -177,6 +185,14 @@
     </div>
     <div class="fld" id="fld_especificaciones"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Según el elemento: grosores, formatos, acabados, capacidades técnicas, velocidad, tamaño de trabajo..."></textarea></div>
     <div class="fld" id="fld_variantes" style="display:none;"><label>Variantes</label><textarea id="f_variantes" placeholder="Tamaños, número de copias, autocopiativo o no, encuadernado, acabados posibles..."></textarea></div>
+    <div class="fld" id="fld_materialesUsados" style="display:none;">
+      <label>Materiales que usa</label>
+      <div id="checksMateriales" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+    <div class="fld" id="fld_maquinasUsadas" style="display:none;">
+      <label>Máquinas que usa</label>
+      <div id="checksMaquinas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
     <div class="fld" id="fld_materialesCompatibles" style="display:none;"><label>Materiales</label><textarea id="f_materialesCompatibles" placeholder="Qué materiales trabaja esta máquina..."></textarea></div>
     <div class="fld" id="fld_tamanos" style="display:none;"><label>Tamaños</label><textarea id="f_tamanos" placeholder="Tamaño máximo/mínimo de trabajo, formatos admitidos..."></textarea></div>
     <div class="fld" id="fld_colores" style="display:none;"><label>Colores</label><textarea id="f_colores" placeholder="Colores o tintas disponibles en esta máquina..."></textarea></div>
@@ -516,6 +532,8 @@ function renderGrid(){
         </div>
       </div>
       ${(currentTab==='productos'||currentTab==='vehiculos') ? `<label>Variantes</label><div class="val ${m.variantes?'':'empty'}">${m.variantes ? escapeHtml(m.variantes) : 'Sin variantes todavía.'}</div>` : ''}
+      ${currentTab==='productos' && (m.materialesUsados||[]).length ? `<label>Materiales que usa</label><div class="chipRow">${m.materialesUsados.map(n=>`<span class="chip gm">${escapeHtml(n)}</span>`).join('')}</div>` : ''}
+      ${currentTab==='productos' && (m.maquinasUsadas||[]).length ? `<label>Máquinas que usa</label><div class="chipRow">${m.maquinasUsadas.map(n=>`<span class="chip">${escapeHtml(n)}</span>`).join('')}</div>` : ''}
       <label>Especificaciones</label>
       <div class="val ${m.especificaciones?'':'empty'}">${m.especificaciones ? escapeHtml(m.especificaciones) : 'Sin especificaciones todavía.'}</div>
       ${m.notas ? `<label>Notas</label><div class="val">${escapeHtml(m.notas)}</div>` : ''}
@@ -528,10 +546,27 @@ function setFieldVisibility(){
   document.getElementById('fld_especificaciones').style.display = currentTab==='maquinas' ? 'none' : 'block';
   document.getElementById('fld_notas').style.display = currentTab==='maquinas' ? 'none' : 'block';
   document.getElementById('fld_variantes').style.display = (currentTab==='productos'||currentTab==='vehiculos') ? 'block' : 'none';
+  document.getElementById('fld_materialesUsados').style.display = currentTab==='productos' ? 'block' : 'none';
+  document.getElementById('fld_maquinasUsadas').style.display = currentTab==='productos' ? 'block' : 'none';
   document.getElementById('fld_materialesCompatibles').style.display = currentTab==='maquinas' ? 'block' : 'none';
   document.getElementById('fld_tamanos').style.display = currentTab==='maquinas' ? 'block' : 'none';
   document.getElementById('fld_colores').style.display = currentTab==='maquinas' ? 'block' : 'none';
   document.getElementById('fld_varios').style.display = currentTab==='maquinas' ? 'block' : 'none';
+}
+
+function renderChecks(containerId, opciones, seleccionados){
+  const el = document.getElementById(containerId);
+  const sel = seleccionados || [];
+  el.innerHTML = opciones.map(nombre => {
+    const checked = sel.includes(nombre);
+    return `<label class="checkChip ${checked?'checked':''}">
+      <input type="checkbox" value="${escapeHtml(nombre)}" ${checked?'checked':''} onchange="this.closest('label').classList.toggle('checked', this.checked)">
+      ${escapeHtml(nombre)}
+    </label>`;
+  }).join('') || '<span style="color:var(--paper-dim);font-size:12px;">Añade materiales o máquinas primero en sus pestañas.</span>';
+}
+function getChecked(containerId){
+  return Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(el => el.value);
 }
 
 function openModal(){
@@ -547,6 +582,10 @@ function openModal(){
   document.getElementById('f_colores').value = '';
   document.getElementById('f_varios').value = '';
   document.getElementById('f_notas').value = '';
+  if(currentTab === 'productos'){
+    renderChecks('checksMateriales', materiales.map(m=>m.nombre), []);
+    renderChecks('checksMaquinas', maquinas.map(m=>m.nombre), []);
+  }
   setFieldVisibility();
   document.getElementById('deleteBtn').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('show');
@@ -568,6 +607,10 @@ function openEdit(id){
   document.getElementById('f_colores').value = m.colores || '';
   document.getElementById('f_varios').value = m.varios || '';
   document.getElementById('f_notas').value = m.notas || '';
+  if(currentTab === 'productos'){
+    renderChecks('checksMateriales', materiales.map(x=>x.nombre), m.materialesUsados || []);
+    renderChecks('checksMaquinas', maquinas.map(x=>x.nombre), m.maquinasUsadas || []);
+  }
   setFieldVisibility();
   document.getElementById('deleteBtn').style.display = 'inline-block';
   document.getElementById('modalOverlay').classList.add('show');
@@ -588,6 +631,10 @@ async function submitMaterial(){
     payload.especificaciones = document.getElementById('f_especificaciones').value.trim();
     payload.notas = document.getElementById('f_notas').value.trim();
     if(currentTab==='productos'||currentTab==='vehiculos') payload.variantes = document.getElementById('f_variantes').value.trim();
+    if(currentTab==='productos'){
+      payload.materialesUsados = getChecked('checksMateriales');
+      payload.maquinasUsadas = getChecked('checksMaquinas');
+    }
   }
   const labels = { materiales: 'Material', productos: 'Producto', maquinas: 'Máquina', vehiculos: 'Vehículo' };
   try{
@@ -620,6 +667,40 @@ async function deleteMaterial(){
     renderGrid();
     showToast('Eliminado.');
   }catch(err){ showToast('No se pudo eliminar: ' + err.message); }
+}
+
+async function exportarCopia(){
+  showToast('Preparando copia de seguridad...');
+  try{
+    const [mats, prods, maqs, vehs, notasImp, notasGen] = await Promise.all([
+      fetchColeccion('materiales'),
+      fetchColeccion('productos'),
+      fetchColeccion('maquinas'),
+      fetchColeccion('vehiculos'),
+      fetch(`${FN_MATERIALES}?coleccion=notas`, { headers: { 'x-crm-password': crmPassword } }).then(r=>r.json()),
+      fetch(`${FN_MATERIALES}?coleccion=notasgenerales`, { headers: { 'x-crm-password': crmPassword } }).then(r=>r.json())
+    ]);
+    const backup = {
+      exportado: new Date().toISOString(),
+      origen: 'Gráficas Mera — Materiales y productos',
+      materiales: mats,
+      productos: prods,
+      maquinas: maqs,
+      vehiculos: vehs,
+      comoImprimimos: notasImp.texto || '',
+      notas: notasGen.texto || ''
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `graficasmera-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Copia descargada.');
+  }catch(err){ showToast('No se pudo exportar: ' + err.message); }
 }
 
 // ---------- INIT ----------
