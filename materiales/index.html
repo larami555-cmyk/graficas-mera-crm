@@ -163,10 +163,13 @@
         <option value="General">General</option>
       </select>
     </div>
-    <div class="fld"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Según el elemento: grosores, formatos, acabados, capacidades técnicas, velocidad, tamaño de trabajo..."></textarea></div>
+    <div class="fld" id="fld_especificaciones"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Según el elemento: grosores, formatos, acabados, capacidades técnicas, velocidad, tamaño de trabajo..."></textarea></div>
     <div class="fld" id="fld_variantes" style="display:none;"><label>Variantes</label><textarea id="f_variantes" placeholder="Tamaños, número de copias, autocopiativo o no, encuadernado, acabados posibles..."></textarea></div>
-    <div class="fld" id="fld_materialesCompatibles" style="display:none;"><label>Materiales compatibles</label><textarea id="f_materialesCompatibles" placeholder="Qué materiales y espesores admite esta máquina..."></textarea></div>
-    <div class="fld"><label>Notas</label><textarea id="f_notas" placeholder="Notas técnicas, proveedores, tiempos de producción..."></textarea></div>
+    <div class="fld" id="fld_materialesCompatibles" style="display:none;"><label>Materiales</label><textarea id="f_materialesCompatibles" placeholder="Qué materiales trabaja esta máquina..."></textarea></div>
+    <div class="fld" id="fld_tamanos" style="display:none;"><label>Tamaños</label><textarea id="f_tamanos" placeholder="Tamaño máximo/mínimo de trabajo, formatos admitidos..."></textarea></div>
+    <div class="fld" id="fld_colores" style="display:none;"><label>Colores</label><textarea id="f_colores" placeholder="Colores o tintas disponibles en esta máquina..."></textarea></div>
+    <div class="fld" id="fld_varios" style="display:none;"><label>Varios</label><textarea id="f_varios" placeholder="Cualquier otra cosa a tener en cuenta..."></textarea></div>
+    <div class="fld" id="fld_notas"><label>Notas</label><textarea id="f_notas" placeholder="Notas técnicas, proveedores, tiempos de producción..."></textarea></div>
     <div class="modalBtns">
       <button class="action danger" id="deleteBtn" style="display:none;" onclick="deleteMaterial()">Eliminar</button>
       <div class="right">
@@ -338,7 +341,7 @@ async function syncDefaultsFaltantes(coleccion, nombres){
     ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
     : coleccion === 'productos'
       ? (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' })
-      : (nombre) => ({ nombre, categoria: '', especificaciones: '', materialesCompatibles: '', notas: '' });
+      : (nombre) => ({ nombre, categoria: '', materialesCompatibles: '', tamanos: '', colores: '', varios: '' });
   for(const nombre of nombres){
     const existe = list.some(x => x.nombre.trim().toLowerCase() === nombre.toLowerCase());
     if(existe) continue;
@@ -356,7 +359,7 @@ async function seedDefaults(coleccion, nombres){
     ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
     : coleccion === 'productos'
       ? (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' })
-      : (nombre) => ({ nombre, categoria: '', especificaciones: '', materialesCompatibles: '', notas: '' });
+      : (nombre) => ({ nombre, categoria: '', materialesCompatibles: '', tamanos: '', colores: '', varios: '' });
   for(const nombre of nombres){
     try{
       const data = await apiCall('POST', coleccion, { [itemKey]: defaults(nombre) });
@@ -407,7 +410,7 @@ function renderGrid(){
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
   const cat = document.getElementById('categoryFilter').value;
   const filtered = list.filter(m=>{
-    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q) || (m.variantes||'').toLowerCase().includes(q) || (m.materialesCompatibles||'').toLowerCase().includes(q);
+    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q) || (m.variantes||'').toLowerCase().includes(q) || (m.materialesCompatibles||'').toLowerCase().includes(q) || (m.tamanos||'').toLowerCase().includes(q) || (m.colores||'').toLowerCase().includes(q) || (m.varios||'').toLowerCase().includes(q);
     const matchCat = !cat || m.categoria === cat;
     return matchQ && matchCat;
   });
@@ -416,7 +419,27 @@ function renderGrid(){
     grid.innerHTML = `<div id="emptyList" style="grid-column:1/-1;">${list.length===0 ? `Todavía no hay ${label}s. Añade el primero con "+ Añadir ${label}".` : 'Sin resultados para ese filtro.'}</div>`;
     return;
   }
-  grid.innerHTML = filtered.map(m=>`
+  grid.innerHTML = filtered.map(m=>{
+    if(currentTab === 'maquinas'){
+      return `
+      <div class="card">
+        <div class="cardTop">
+          <div>
+            <h3>${escapeHtml(m.nombre)}</h3>
+            <span class="cat ${m.categoria?'':'empty'}">${escapeHtml(m.categoria || 'Sin categoría')}</span>
+          </div>
+          <div class="cardBtns"><button class="iconBtn" onclick="openEdit('${m.id}')">Editar</button></div>
+        </div>
+        <label>Materiales</label>
+        <div class="val ${m.materialesCompatibles?'':'empty'}">${m.materialesCompatibles ? escapeHtml(m.materialesCompatibles) : 'Sin datos todavía.'}</div>
+        <label>Tamaños</label>
+        <div class="val ${m.tamanos?'':'empty'}">${m.tamanos ? escapeHtml(m.tamanos) : 'Sin datos todavía.'}</div>
+        <label>Colores</label>
+        <div class="val ${m.colores?'':'empty'}">${m.colores ? escapeHtml(m.colores) : 'Sin datos todavía.'}</div>
+        ${m.varios ? `<label>Varios</label><div class="val">${escapeHtml(m.varios)}</div>` : ''}
+      </div>`;
+    }
+    return `
     <div class="card">
       <div class="cardTop">
         <div>
@@ -430,13 +453,22 @@ function renderGrid(){
       ${currentTab==='productos' ? `<label>Variantes</label><div class="val ${m.variantes?'':'empty'}">${m.variantes ? escapeHtml(m.variantes) : 'Sin variantes todavía.'}</div>` : ''}
       <label>Especificaciones</label>
       <div class="val ${m.especificaciones?'':'empty'}">${m.especificaciones ? escapeHtml(m.especificaciones) : 'Sin especificaciones todavía.'}</div>
-      ${currentTab==='maquinas' ? `<label>Materiales compatibles</label><div class="val ${m.materialesCompatibles?'':'empty'}">${m.materialesCompatibles ? escapeHtml(m.materialesCompatibles) : 'Sin datos todavía.'}</div>` : ''}
       ${m.notas ? `<label>Notas</label><div class="val">${escapeHtml(m.notas)}</div>` : ''}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 // ---------- MODAL ----------
+function setFieldVisibility(){
+  document.getElementById('fld_especificaciones').style.display = currentTab==='maquinas' ? 'none' : 'block';
+  document.getElementById('fld_notas').style.display = currentTab==='maquinas' ? 'none' : 'block';
+  document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
+  document.getElementById('fld_materialesCompatibles').style.display = currentTab==='maquinas' ? 'block' : 'none';
+  document.getElementById('fld_tamanos').style.display = currentTab==='maquinas' ? 'block' : 'none';
+  document.getElementById('fld_colores').style.display = currentTab==='maquinas' ? 'block' : 'none';
+  document.getElementById('fld_varios').style.display = currentTab==='maquinas' ? 'block' : 'none';
+}
+
 function openModal(){
   editingId = null;
   const titles = { materiales: 'Nuevo material', productos: 'Nuevo producto', maquinas: 'Nueva máquina' };
@@ -446,9 +478,11 @@ function openModal(){
   document.getElementById('f_especificaciones').value = '';
   document.getElementById('f_variantes').value = '';
   document.getElementById('f_materialesCompatibles').value = '';
+  document.getElementById('f_tamanos').value = '';
+  document.getElementById('f_colores').value = '';
+  document.getElementById('f_varios').value = '';
   document.getElementById('f_notas').value = '';
-  document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
-  document.getElementById('fld_materialesCompatibles').style.display = currentTab==='maquinas' ? 'block' : 'none';
+  setFieldVisibility();
   document.getElementById('deleteBtn').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('f_nombre').focus(),50);
@@ -465,9 +499,11 @@ function openEdit(id){
   document.getElementById('f_especificaciones').value = m.especificaciones || '';
   document.getElementById('f_variantes').value = m.variantes || '';
   document.getElementById('f_materialesCompatibles').value = m.materialesCompatibles || '';
+  document.getElementById('f_tamanos').value = m.tamanos || '';
+  document.getElementById('f_colores').value = m.colores || '';
+  document.getElementById('f_varios').value = m.varios || '';
   document.getElementById('f_notas').value = m.notas || '';
-  document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
-  document.getElementById('fld_materialesCompatibles').style.display = currentTab==='maquinas' ? 'block' : 'none';
+  setFieldVisibility();
   document.getElementById('deleteBtn').style.display = 'inline-block';
   document.getElementById('modalOverlay').classList.add('show');
 }
@@ -477,14 +513,17 @@ async function submitMaterial(){
   const nombre = document.getElementById('f_nombre').value.trim();
   if(!nombre){ showToast('El nombre es obligatorio.'); return; }
   const itemKey = getItemKey();
-  const payload = {
-    nombre,
-    categoria: document.getElementById('f_categoria').value,
-    especificaciones: document.getElementById('f_especificaciones').value.trim(),
-    notas: document.getElementById('f_notas').value.trim()
-  };
-  if(currentTab==='productos') payload.variantes = document.getElementById('f_variantes').value.trim();
-  if(currentTab==='maquinas') payload.materialesCompatibles = document.getElementById('f_materialesCompatibles').value.trim();
+  const payload = { nombre, categoria: document.getElementById('f_categoria').value };
+  if(currentTab === 'maquinas'){
+    payload.materialesCompatibles = document.getElementById('f_materialesCompatibles').value.trim();
+    payload.tamanos = document.getElementById('f_tamanos').value.trim();
+    payload.colores = document.getElementById('f_colores').value.trim();
+    payload.varios = document.getElementById('f_varios').value.trim();
+  } else {
+    payload.especificaciones = document.getElementById('f_especificaciones').value.trim();
+    payload.notas = document.getElementById('f_notas').value.trim();
+    if(currentTab==='productos') payload.variantes = document.getElementById('f_variantes').value.trim();
+  }
   try{
     const list = getCurrentList();
     const labels = { materiales: 'Material', productos: 'Producto', maquinas: 'Máquina' };
