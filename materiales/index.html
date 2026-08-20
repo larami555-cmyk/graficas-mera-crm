@@ -185,8 +185,71 @@ let currentTab = 'materiales';
 let crmPassword = null;
 let editingId = null;
 
-const PRODUCTOS_DEFAULT = ['Talonarios','Revistas','Monolitos','Dípticos y trípticos','Cartelería','Neones','Sellos','Banderolas','Loterías','Cartas y menús'];
+const PRODUCTOS_DEFAULT = ['Talonarios','Revistas','Monítico','Cartelería','Neones','Sellos','Banderolas','Loterías','Cartas y menús'];
 const MATERIALES_DEFAULT = ['PVC','Cartón pluma','Aluminio','Metacrilato','Madera','Lona','Vinilo','Glass pack'];
+
+// Catálogo técnico Endutex (materiales técnicos rígidos) - se usa para rellenar huecos vacíos, nunca pisa lo ya escrito
+const CATALOGO_MATERIALES = {
+  'Metacrilato': {
+    categoria: 'Láser',
+    especificaciones: 'COLADA: planchas 3050x2030mm (6-25mm) y 2050x1250mm (30-50mm). Resistente a la intemperie, alta transmisión de luz (>92%), apto para termoconformar y corte láser. Colores: incoloro, blanco, negro, opal, y gamas de color/efectos (Sweet Pastel, Fluorescent, Duo oro/plata, espejo). Densidad 1,19 kg/m². Clasificación fuego B2/M4.\nEXTRUSIÓN (XT): planchas 3050x2050mm, espesores 1-20mm, 2 caras brillo. También blanco (hielo/opal/opaco) y espejo (plata/oro/color). Calibre uniforme, buena calidad óptica.\nAplicaciones: rótulos, letreros de neón, cartelería, PLV, expositores, corpóreas iluminadas con LED, acristalamiento de seguridad.'
+  },
+  'PVC': {
+    categoria: '',
+    especificaciones: 'PVC ESPUMADO (Forex Lite): blanco 1560x3050 y 2050x3050mm (3-30mm), negro 100% reciclado 2050x3050 y 1560x3050mm (3-19mm). Ligero y rígido, resistente al impacto, baja absorción de agua, se puede imprimir/pintar/serigrafiar/taladrar. Resistencia limitada a rayos UV.\nCOMPOSITE PVC RCY BOARD: 2030x3050mm, 3 y 5mm, núcleo de PVC espumado reciclado (hasta 80%), alternativa ecológica al PVC y económica al composite de aluminio. Apto impresión digital, V-cutt y formas.\nAplicaciones: publicidad, impresión digital UV, serigrafía, stands, interiorismo, expositores, falsos techos.'
+  },
+  'Aluminio': {
+    categoria: '',
+    especificaciones: 'ETALBOND (composite de aluminio): panel sandwich con núcleo de polietileno entre chapas de aluminio. Espesores 2, 3, 4 y 6mm. Anchos estándar 1500-2000mm, largos 3050-4050mm. Ligero, rígido, gran planimetría, acabado PVDF apto exterior. Colores: blanco, negro, silver, azul, rojo, antracita, cepillado, amarillo, verde, navy + versión espejo (plata/oro).\nVersión D3: para mecanizar (imagen corporativa, fachada ventilada, revestimientos).\nVersión D1/D2: para impresión digital, interior/exterior.\nAplicaciones: fachadas, imagen corporativa, revestimientos, señalética.'
+  },
+  'Madera': {
+    categoria: '',
+    especificaciones: 'STARWOOD DM PRINT: tablero DM blanco para impresión a doble cara, 1220x2440mm, espesores 3/5/10/19mm. Disponible en blanco, negro o natural (2 caras). Densidad 840 kg/m³, resistencia a flexión mín. 30 N/mm². Alternativa con aspecto natural a otros soportes de impresión digital.'
+  },
+  'Cartón pluma': {
+    categoria: 'Imprenta',
+    especificaciones: 'KAPA LINE: panel clásico polivalente, 1520x3050mm, 5 y 10mm, blanco. Alta rigidez y ligereza, hasta 2m de ancho.\nKAPA PLAST: impresión directa de alta gama, 1400x3000 a 2030x3050mm, 5 y 10mm, repele humedad, se puede limpiar.\nKAPA FIX: capa autoadhesiva (1 o 2 caras) reforzada con aluminio, 1530x3050mm, 10mm.\nFOAM-X: espuma versátil con superficies de papel reciclado, 5 y 10mm, aplicaciones sencillas a corto plazo en interior.\nTodos con núcleo de espuma de poliuretano, papel con certificación FSC.'
+  },
+  'Policarbonato': {
+    categoria: '',
+    especificaciones: 'IMPEX / IMPEX UV: planchas 3050x2050 y 2050x1525mm, 0,75 a 20mm. Prácticamente irrompible (250 veces más resistente que el vidrio), termoconformable, curvable en frío. Incoloro, opal blanco, UV fume. Protección al fuego B-s1-d0.\nIMPEX HC (Hard Coated): resistente a la abrasión y rayado, 2050x3050mm, 3-15mm, garantía 10 años rotura / 5 años delaminación. No termoconformable.\nAplicaciones: arquitectura, cerramientos, protección de maquinaria, colegios/hospitales, barreras de sonido.'
+  },
+  'PET / PET-G': {
+    categoria: '',
+    especificaciones: 'MARPET-A FS (PET): 1250x2050mm, 0,7 a 2mm. Memoria mecánica, se dobla en frío (efecto bisagra), fácil troquelado, apto contacto alimentario. Cristaliza (blanquea) a más de 60°C.\nMARPET-G FS (PET-G): 2050x3050mm (2-10mm) y 1250x2050mm (0,5-0,7mm). Entre acrílico y policarbonato en propiedades/precio. Apto imprimir (excepto offset), buena resistencia al impacto, conformado al vacío.\nAplicaciones: expositores, PLV, envases, señalética, embalaje.'
+  },
+  'Polipropileno': {
+    categoria: '',
+    especificaciones: 'PANEL SANDWICH PP ALVEOLAR: núcleo nido de abeja, 3050x2050mm, 2,6 a 8,4mm. Blanco, blanco núcleo negro, all black. Rígido, ligero, 100% reciclable, resistente a la intemperie.\nE-PLAST CELULAR: doble pared núcleo celular, 3050x2050mm, ~3,5mm. Ligero, económico, homologación alimentaria, reciclable 100%.\nAplicaciones: cartelería impresión digital, rótulos, PLV, embalaje, cajas.'
+  },
+  'Cartón microcanal': {
+    categoria: 'Imprenta',
+    especificaciones: 'MICROCANAL: 2400x1600 y 2000x3000mm, 1,5mm, núcleo corrugado. Blanco 1 o 2 caras. Ligero, rígido, reciclable, se puede troquelar.\nDOBLE MICROCANAL: mismo formato, 3 y 4,5mm, blanco 2 caras o kraft, mayor resistencia.\nAplicaciones: displays, cartelería, estuches, PLV, señalización aérea (no apto exterior, no impermeable).'
+  },
+  'Cartón de construcción': {
+    categoria: '',
+    especificaciones: 'ABIPLEX: 1220x2440/3050mm, 9 y 13mm, blanco/kraft/FR. Cartón compuesto de celulosa, fabricado en España, ligero y bajo peso.\nRE-BOARD: 1600x2400mm (5mm) y 1600x3200mm (10-16mm). Versiones Basic, Premium, Kraft, White, Black. Núcleo estriado, resistente, fácil de cortar, imprime bien.\nAplicaciones: expositores FSD, tótems, mobiliario, escaparates, stands, construcción 3D ligera.'
+  }
+};
+
+async function syncCatalogoMateriales(){
+  for(const nombre in CATALOGO_MATERIALES){
+    const datos = CATALOGO_MATERIALES[nombre];
+    const existente = materiales.find(m => m.nombre.trim().toLowerCase() === nombre.toLowerCase());
+    try{
+      if(!existente){
+        const data = await apiCall('POST', 'materiales', { material: { nombre, categoria: datos.categoria, especificaciones: datos.especificaciones, notas: '' } });
+        materiales.unshift(data.material);
+      } else if(!existente.especificaciones){
+        const patch = { especificaciones: datos.especificaciones };
+        if(!existente.categoria && datos.categoria) patch.categoria = datos.categoria;
+        const data = await apiCall('PUT', 'materiales', { id: existente.id, patch });
+        const idx = materiales.findIndex(x => x.id === existente.id);
+        if(idx>-1) materiales[idx] = data.material;
+      }
+    }catch(err){ /* seguimos con el resto si falla uno */ }
+  }
+}
 
 // ---------- TABS ----------
 function switchTab(tab){
@@ -236,6 +299,7 @@ async function attemptLoad(fromLoginForm){
     document.getElementById('app').classList.add('ready');
     if(materiales.length === 0){ await seedDefaults('materiales', MATERIALES_DEFAULT); }
     if(productos.length === 0){ await seedDefaults('productos', PRODUCTOS_DEFAULT); }
+    await syncCatalogoMateriales();
     renderGrid();
   }catch(err){
     if(err.message === '401'){
