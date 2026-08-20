@@ -7,15 +7,15 @@
 <title>Gráficas Mera — Materiales y productos</title>
 <link rel="icon" href="../crm/images/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" sizes="180x180" href="../crm/images/icon-180.png">
-<meta name="theme-color" content="#454545">
+<meta name="theme-color" content="#d3d0d3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --steel-950:#454545; --steel-900:#4d4d4d; --steel-850:#565656; --steel-800:#606060;
-    --steel-700:#6b6b6b; --line:#6b6b6b;
-    --paper:#f5f5f2; --paper-dim:#a8a8a4; --ink:#d93395; --ink-dim:#a12571;
-    --cyan:#5effaf; --cyan-dim:#204a38;
+    --steel-950:#d3d0d3; --steel-900:#dbd9db; --steel-850:#e6e4e6; --steel-800:#eeeced;
+    --steel-700:#b9b6b9; --line:#b5b2b5;
+    --paper:#232323; --paper-dim:#6e6b6e; --ink:#d93395; --ink-dim:#a12571;
+    --cyan:#2fa876; --cyan-dim:#cdf3e0; --cyan-text:#1c8256;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;min-height:100%;}
@@ -31,7 +31,7 @@
   #loginBox input:focus{outline:none;border-color:var(--ink-dim);}
   #loginBox button{width:100%;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;}
   #loginBox button:hover{background:#f04dae;}
-  #loginError{color:#e79a86;font-size:12.5px;margin-top:12px;min-height:16px;}
+  #loginError{color:#b8382a;font-size:12.5px;margin-top:12px;min-height:16px;}
 
   #app{display:none;max-width:1000px;margin:0 auto;padding:30px 20px 80px;}
   #app.ready{display:block;}
@@ -60,7 +60,7 @@
   .card{background:var(--steel-900);border:1px solid var(--line);border-radius:5px;padding:16px 18px;}
   .card .cardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
   .card h3{font-size:16px;margin:0 0 4px;color:var(--paper);font-family:'Inter',sans-serif;font-weight:700;}
-  .card .cat{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--cyan-dim);color:#c3f5dd;padding:2px 8px;border-radius:20px;}
+  .card .cat{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--cyan-dim);color:var(--cyan-text);padding:2px 8px;border-radius:20px;}
   .card .cat.empty{background:var(--steel-800);color:var(--paper-dim);}
   .card .cardBtns{display:flex;gap:6px;flex-shrink:0;}
   .card .iconBtn{background:none;border:1px solid var(--line);color:var(--paper-dim);border-radius:3px;padding:5px 8px;cursor:pointer;font-size:12px;}
@@ -84,7 +84,7 @@
   button.action:hover{border-color:var(--ink-dim);}
   button.action.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
   button.action.primary:hover{background:#f04dae;}
-  button.action.danger{color:#e79a86;}
+  button.action.danger{color:#b8382a;}
   button.action.danger:hover{border-color:var(--ink);}
 
   #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--steel-800);border:1px solid var(--ink-dim);color:var(--paper);

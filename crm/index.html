@@ -10,20 +10,20 @@
 <link rel="icon" type="image/png" sizes="16x16" href="./images/icon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./images/icon-180.png">
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#454545">
+<meta name="theme-color" content="#d3d0d3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GM CRM">
-<meta name="msapplication-TileColor" content="#454545">
+<meta name="msapplication-TileColor" content="#d3d0d3">
 <meta name="msapplication-TileImage" content="./images/icon-152.png">
 <meta name="msapplication-config" content="./browserconfig.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --steel-950:#454545; --steel-900:#4d4d4d; --steel-850:#565656; --steel-800:#606060;
-    --steel-700:#6b6b6b; --steel-600:#454545; --line:#6b6b6b;
-    --paper:#f5f5f2; --paper-dim:#a8a8a4; --ink:#d93395; --ink-dim:#a12571;
-    --cyan:#5effaf; --cyan-dim:#204a38; --amber:#e0a53e; --amber-dim:#4a3a1c;
+    --steel-950:#d3d0d3; --steel-900:#dbd9db; --steel-850:#e6e4e6; --steel-800:#eeeced;
+    --steel-700:#b9b6b9; --steel-600:#a9a6a9; --line:#b5b2b5;
+    --paper:#232323; --paper-dim:#6e6b6e; --ink:#d93395; --ink-dim:#a12571;
+    --cyan:#2fa876; --cyan-dim:#cdf3e0; --cyan-text:#1c8256; --amber:#b8791f; --amber-dim:#f6e0ae;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;}
@@ -59,9 +59,9 @@
   .clientCard .nombre{font-weight:600;font-size:14px;color:var(--paper);}
   .clientCard .localidad{font-size:11.5px;color:var(--paper-dim);margin-top:2px;}
   .badge{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:20px;white-space:nowrap;}
-  .badge.alta{background:var(--amber-dim);color:#f0c67c;}
-  .badge.media{background:var(--cyan-dim);color:#a8f0cf;}
-  .badge.baja{background:var(--steel-700);color:var(--paper-dim);}
+  .badge.alta{background:var(--amber-dim);color:#7a4f16;}
+  .badge.media{background:var(--cyan-dim);color:var(--cyan-text);}
+  .badge.baja{background:var(--steel-700);color:#fff;}
   .badge.sin{background:var(--steel-800);color:var(--paper-dim);border:1px dashed var(--line);}
   #emptyList{padding:30px 10px;text-align:center;color:var(--paper-dim);font-size:12.5px;line-height:1.5;}
 
@@ -84,7 +84,7 @@
   button.action:hover{border-color:var(--ink-dim);}
   button.action.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
   button.action.primary:hover{background:#f04dae;}
-  button.action.danger{color:#e79a86;}
+  button.action.danger{color:#b8382a;}
   button.action.danger:hover{border-color:var(--ink);}
   button.action:disabled{opacity:.5;cursor:default;}
 
@@ -105,7 +105,7 @@
 
   .chipRow{display:flex;flex-wrap:wrap;gap:6px;}
   .chip{background:var(--steel-800);border:1px solid var(--line);color:var(--paper);font-size:12px;padding:4px 10px;border-radius:20px;}
-  .chip.gm{background:var(--cyan-dim);border-color:var(--cyan);color:#c3f5dd;}
+  .chip.gm{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan-text);}
 
   #potencialBars{display:flex;flex-direction:column;gap:10px;}
   .potRow{display:flex;align-items:center;gap:12px;}
@@ -152,7 +152,7 @@
   #loginBox input:focus{outline:none;border-color:var(--ink-dim);}
   #loginBox button{width:100%;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;}
   #loginBox button:hover{background:#f04dae;}
-  #loginError{color:#e79a86;font-size:12.5px;margin-top:12px;min-height:16px;}
+  #loginError{color:#b8382a;font-size:12.5px;margin-top:12px;min-height:16px;}
 
   @media (max-width: 820px){
     #sidebar{position:fixed;inset:0;width:100%;min-width:0;z-index:20;transform:translateX(0);}
