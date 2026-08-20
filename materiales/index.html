@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Gráficas Mera — Materiales y especificaciones</title>
+<title>Gráficas Mera — Materiales y productos</title>
 <link rel="icon" href="../crm/images/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" sizes="180x180" href="../crm/images/icon-180.png">
 <meta name="theme-color" content="#0d0d0d">
@@ -49,6 +49,10 @@
   #categoryFilter{background:var(--steel-850);border:1px solid var(--line);color:var(--paper);padding:10px 12px;border-radius:3px;font-size:13.5px;font-family:'Inter',sans-serif;}
   #addBtn{background:var(--ink);color:#fff;border:none;border-radius:3px;padding:10px 16px;font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap;}
   #addBtn:hover{background:#f04dae;}
+
+  .tabBtn{background:var(--steel-850);border:1px solid var(--line);color:var(--paper-dim);border-radius:3px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+  .tabBtn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .tabBtn:not(.active):hover{border-color:var(--ink-dim);color:var(--paper);}
 
   #emptyList{padding:50px 20px;text-align:center;color:var(--paper-dim);font-size:13px;line-height:1.6;}
 
@@ -97,7 +101,7 @@
 <div id="loginScreen">
   <div id="loginBox">
     <div class="eyebrow">Gráficas Mera</div>
-    <h1 class="display">Materiales y especificaciones</h1>
+    <h1 class="display">Materiales y productos</h1>
     <div style="position:relative;">
       <input id="loginInput" type="password" placeholder="Contraseña de acceso" autocomplete="current-password">
       <button type="button" onclick="togglePasswordVisibility()" aria-label="Mostrar contraseña"
@@ -114,10 +118,15 @@
   <div id="topBar">
     <div>
       <div class="eyebrow">Gráficas Mera · A Coruña</div>
-      <h1 class="display">Materiales y especificaciones</h1>
+      <h1 class="display">Materiales y productos</h1>
       <div class="sub">Chuleta de referencia técnica — sin precios, solo especificaciones</div>
     </div>
     <a class="backLink" href="../crm/">← Volver al CRM</a>
+  </div>
+
+  <div id="tabs" style="display:flex;gap:8px;margin-bottom:20px;">
+    <button class="tabBtn active" id="tabMateriales" onclick="switchTab('materiales')">Materiales</button>
+    <button class="tabBtn" id="tabProductos" onclick="switchTab('productos')">Productos</button>
   </div>
 
   <div id="controls">
@@ -154,6 +163,7 @@
       </select>
     </div>
     <div class="fld"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Grosores disponibles, formatos/tamaños estándar, acabados, colores, compatibilidad de impresión..."></textarea></div>
+    <div class="fld" id="fld_variantes" style="display:none;"><label>Variantes</label><textarea id="f_variantes" placeholder="Tamaños, número de copias, autocopiativo o no, encuadernado, acabados posibles..."></textarea></div>
     <div class="fld"><label>Notas</label><textarea id="f_notas" placeholder="Notas técnicas, proveedores, tiempos de producción..."></textarea></div>
     <div class="modalBtns">
       <button class="action danger" id="deleteBtn" style="display:none;" onclick="deleteMaterial()">Eliminar</button>
@@ -170,8 +180,27 @@
 <script>
 const FN_MATERIALES = '/.netlify/functions/gm-materiales';
 let materiales = [];
+let productos = [];
+let currentTab = 'materiales';
 let crmPassword = null;
 let editingId = null;
+
+const PRODUCTOS_DEFAULT = ['Talonarios','Revistas','Monolitos','Dípticos y trípticos','Cartelería','Neones','Sellos','Banderolas','Loterías','Cartas y menús'];
+const MATERIALES_DEFAULT = ['PVC','Cartón pluma','Aluminio','Metacrilato','Madera','Lona','Vinilo','Glass pack'];
+
+// ---------- TABS ----------
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tabMateriales').classList.toggle('active', tab==='materiales');
+  document.getElementById('tabProductos').classList.toggle('active', tab==='productos');
+  document.getElementById('addBtn').textContent = tab==='materiales' ? '+ Añadir material' : '+ Añadir producto';
+  renderCategoryFilter();
+  renderGrid();
+}
+function renderCategoryFilter(){
+  const sel = document.getElementById('categoryFilter');
+  sel.value = '';
+}
 
 // ---------- LOGIN ----------
 function togglePasswordVisibility(){
@@ -188,37 +217,45 @@ function tryLogin(){
 }
 document.getElementById('loginInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
 
+async function fetchColeccion(coleccion){
+  const r = await fetch(`${FN_MATERIALES}?coleccion=${coleccion}`, { headers: { 'x-crm-password': crmPassword } });
+  if(r.status === 401) throw new Error('401');
+  if(!r.ok) throw new Error('Error del servidor');
+  const data = await r.json();
+  return data[coleccion] || [];
+}
+
 async function attemptLoad(fromLoginForm){
   const errEl = document.getElementById('loginError');
   errEl.textContent = fromLoginForm ? 'Comprobando...' : '';
   try{
-    const r = await fetch(FN_MATERIALES, { headers: { 'x-crm-password': crmPassword } });
-    if(r.status === 401){
-      errEl.textContent = 'Contraseña incorrecta.';
-      localStorage.removeItem('gm_crm_pass');
-      return;
-    }
-    if(!r.ok) throw new Error('Error del servidor');
-    const data = await r.json();
-    materiales = data.materiales || [];
+    materiales = await fetchColeccion('materiales');
+    productos = await fetchColeccion('productos');
     localStorage.setItem('gm_crm_pass', crmPassword);
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').classList.add('ready');
-    if(materiales.length === 0){
-      await seedDefaultMaterials();
-    }
+    if(materiales.length === 0){ await seedDefaults('materiales', MATERIALES_DEFAULT); }
+    if(productos.length === 0){ await seedDefaults('productos', PRODUCTOS_DEFAULT); }
     renderGrid();
   }catch(err){
-    errEl.textContent = 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.';
+    if(err.message === '401'){
+      errEl.textContent = 'Contraseña incorrecta.';
+      localStorage.removeItem('gm_crm_pass');
+    } else {
+      errEl.textContent = 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.';
+    }
   }
 }
 
-async function seedDefaultMaterials(){
-  const nombres = ['PVC','Cartón pluma','Aluminio','Metacrilato','Madera','Lona','Vinilo','Glass pack'];
+async function seedDefaults(coleccion, nombres){
+  const target = coleccion === 'materiales' ? materiales : productos;
+  const defaults = coleccion === 'materiales'
+    ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
+    : (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' });
   for(const nombre of nombres){
     try{
-      const data = await apiCall('POST', { material: { nombre, categoria: '', especificaciones: '', notas: '' } });
-      materiales.unshift(data.material);
+      const data = await apiCall('POST', coleccion, { [coleccion==='materiales'?'material':'producto']: defaults(nombre) });
+      target.unshift(data[coleccion==='materiales'?'material':'producto']);
     }catch(err){ /* si falla uno, seguimos con el resto */ }
   }
 }
@@ -239,11 +276,11 @@ function showToast(msg){
 function escapeHtml(s){
   return (s||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
-async function apiCall(method, payload){
+async function apiCall(method, coleccion, payload){
   const r = await fetch(FN_MATERIALES, {
     method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign({ password: crmPassword }, payload || {}))
+    body: JSON.stringify(Object.assign({ password: crmPassword, coleccion }, payload || {}))
   });
   if(r.status === 401){ showToast('Sesión no autorizada. Vuelve a entrar.'); localStorage.removeItem('gm_crm_pass'); location.reload(); throw new Error('401'); }
   const data = await r.json().catch(()=>({}));
@@ -254,15 +291,17 @@ async function apiCall(method, payload){
 // ---------- GRID ----------
 function renderGrid(){
   const grid = document.getElementById('grid');
+  const list = currentTab === 'materiales' ? materiales : productos;
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
   const cat = document.getElementById('categoryFilter').value;
-  const filtered = materiales.filter(m=>{
-    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q);
+  const filtered = list.filter(m=>{
+    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q) || (m.variantes||'').toLowerCase().includes(q);
     const matchCat = !cat || m.categoria === cat;
     return matchQ && matchCat;
   });
   if(filtered.length===0){
-    grid.innerHTML = `<div id="emptyList" style="grid-column:1/-1;">${materiales.length===0 ? 'Todavía no hay materiales. Añade el primero con "+ Añadir material".' : 'Sin resultados para ese filtro.'}</div>`;
+    const label = currentTab === 'materiales' ? 'material' : 'producto';
+    grid.innerHTML = `<div id="emptyList" style="grid-column:1/-1;">${list.length===0 ? `Todavía no hay ${label}es. Añade el primero con "+ Añadir ${label}".` : 'Sin resultados para ese filtro.'}</div>`;
     return;
   }
   grid.innerHTML = filtered.map(m=>`
@@ -276,6 +315,7 @@ function renderGrid(){
           <button class="iconBtn" onclick="openEdit('${m.id}')">Editar</button>
         </div>
       </div>
+      ${currentTab==='productos' ? `<label>Variantes</label><div class="val ${m.variantes?'':'empty'}">${m.variantes ? escapeHtml(m.variantes) : 'Sin variantes todavía.'}</div>` : ''}
       <label>Especificaciones</label>
       <div class="val ${m.especificaciones?'':'empty'}">${m.especificaciones ? escapeHtml(m.especificaciones) : 'Sin especificaciones todavía.'}</div>
       ${m.notas ? `<label>Notas</label><div class="val">${escapeHtml(m.notas)}</div>` : ''}
@@ -286,24 +326,29 @@ function renderGrid(){
 // ---------- MODAL ----------
 function openModal(){
   editingId = null;
-  document.getElementById('modalTitle').textContent = 'Nuevo material';
+  document.getElementById('modalTitle').textContent = currentTab==='materiales' ? 'Nuevo material' : 'Nuevo producto';
   document.getElementById('f_nombre').value = '';
   document.getElementById('f_categoria').value = '';
   document.getElementById('f_especificaciones').value = '';
+  document.getElementById('f_variantes').value = '';
   document.getElementById('f_notas').value = '';
+  document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
   document.getElementById('deleteBtn').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('f_nombre').focus(),50);
 }
 function openEdit(id){
-  const m = materiales.find(x=>x.id===id);
+  const list = currentTab === 'materiales' ? materiales : productos;
+  const m = list.find(x=>x.id===id);
   if(!m) return;
   editingId = id;
-  document.getElementById('modalTitle').textContent = 'Editar material';
+  document.getElementById('modalTitle').textContent = currentTab==='materiales' ? 'Editar material' : 'Editar producto';
   document.getElementById('f_nombre').value = m.nombre || '';
   document.getElementById('f_categoria').value = m.categoria || '';
   document.getElementById('f_especificaciones').value = m.especificaciones || '';
+  document.getElementById('f_variantes').value = m.variantes || '';
   document.getElementById('f_notas').value = m.notas || '';
+  document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
   document.getElementById('deleteBtn').style.display = 'inline-block';
   document.getElementById('modalOverlay').classList.add('show');
 }
@@ -312,22 +357,25 @@ function closeModal(){ document.getElementById('modalOverlay').classList.remove(
 async function submitMaterial(){
   const nombre = document.getElementById('f_nombre').value.trim();
   if(!nombre){ showToast('El nombre es obligatorio.'); return; }
+  const itemKey = currentTab==='materiales' ? 'material' : 'producto';
   const payload = {
     nombre,
     categoria: document.getElementById('f_categoria').value,
     especificaciones: document.getElementById('f_especificaciones').value.trim(),
     notas: document.getElementById('f_notas').value.trim()
   };
+  if(currentTab==='productos') payload.variantes = document.getElementById('f_variantes').value.trim();
   try{
+    const list = currentTab === 'materiales' ? materiales : productos;
     if(editingId){
-      const data = await apiCall('PUT', { id: editingId, patch: payload });
-      const idx = materiales.findIndex(x=>x.id===editingId);
-      if(idx>-1) materiales[idx] = data.material;
-      showToast('Material actualizado.');
+      const data = await apiCall('PUT', currentTab, { id: editingId, patch: payload });
+      const idx = list.findIndex(x=>x.id===editingId);
+      if(idx>-1) list[idx] = data[itemKey];
+      showToast(currentTab==='materiales' ? 'Material actualizado.' : 'Producto actualizado.');
     } else {
-      const data = await apiCall('POST', { material: payload });
-      materiales.unshift(data.material);
-      showToast('Material añadido.');
+      const data = await apiCall('POST', currentTab, { [itemKey]: payload });
+      list.unshift(data[itemKey]);
+      showToast(currentTab==='materiales' ? 'Material añadido.' : 'Producto añadido.');
     }
     closeModal();
     renderGrid();
@@ -336,13 +384,14 @@ async function submitMaterial(){
 
 async function deleteMaterial(){
   if(!editingId) return;
-  if(!confirm('¿Eliminar este material? No se puede deshacer.')) return;
+  if(!confirm('¿Eliminar este elemento? No se puede deshacer.')) return;
   try{
-    await apiCall('DELETE', { id: editingId });
-    materiales = materiales.filter(x=>x.id!==editingId);
+    await apiCall('DELETE', currentTab, { id: editingId });
+    if(currentTab === 'materiales') materiales = materiales.filter(x=>x.id!==editingId);
+    else productos = productos.filter(x=>x.id!==editingId);
     closeModal();
     renderGrid();
-    showToast('Material eliminado.');
+    showToast('Eliminado.');
   }catch(err){ showToast('No se pudo eliminar: ' + err.message); }
 }
 

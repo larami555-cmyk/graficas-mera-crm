@@ -8,8 +8,8 @@ function jsonResponse(statusCode, obj) {
   };
 }
 
-function uid() {
-  return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function uid(prefix) {
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 exports.handler = async (event) => {
@@ -23,41 +23,49 @@ exports.handler = async (event) => {
     return jsonResponse(401, { error: 'No autorizado' });
   }
 
+  const coleccion = (event.queryStringParameters && event.queryStringParameters.coleccion) || body.coleccion || 'materiales';
+  if (coleccion !== 'materiales' && coleccion !== 'productos') {
+    return jsonResponse(400, { error: 'Colección no válida' });
+  }
+  const prefix = coleccion === 'materiales' ? 'm' : 'p';
+  const itemKey = coleccion === 'materiales' ? 'material' : 'producto';
+
   const store = getStore({
     name: 'gm-materiales-data',
     siteID: process.env.SITE_ID_MANUAL,
     token: process.env.BLOBS_ACCESS_TOKEN
   });
-  let materiales = (await store.get('materiales', { type: 'json' })) || [];
+  let items = (await store.get(coleccion, { type: 'json' })) || [];
 
   try {
     if (event.httpMethod === 'GET') {
-      return jsonResponse(200, { materiales });
+      return jsonResponse(200, { [coleccion]: items });
     }
 
     if (event.httpMethod === 'POST') {
-      const m = Object.assign({
-        nombre: '', categoria: '', especificaciones: '', notas: ''
-      }, body.material || {});
-      if (!m.nombre) return jsonResponse(400, { error: 'El nombre es obligatorio' });
-      m.id = uid();
-      m.creado = new Date().toISOString();
-      materiales.unshift(m);
-      await store.setJSON('materiales', materiales);
-      return jsonResponse(200, { material: m });
+      const defaults = coleccion === 'materiales'
+        ? { nombre: '', categoria: '', especificaciones: '', notas: '' }
+        : { nombre: '', categoria: '', variantes: '', especificaciones: '', notas: '' };
+      const it = Object.assign({}, defaults, body[itemKey] || {});
+      if (!it.nombre) return jsonResponse(400, { error: 'El nombre es obligatorio' });
+      it.id = uid(prefix);
+      it.creado = new Date().toISOString();
+      items.unshift(it);
+      await store.setJSON(coleccion, items);
+      return jsonResponse(200, { [itemKey]: it });
     }
 
     if (event.httpMethod === 'PUT') {
-      const idx = materiales.findIndex(x => x.id === body.id);
-      if (idx === -1) return jsonResponse(404, { error: 'Material no encontrado' });
-      materiales[idx] = Object.assign({}, materiales[idx], body.patch || {});
-      await store.setJSON('materiales', materiales);
-      return jsonResponse(200, { material: materiales[idx] });
+      const idx = items.findIndex(x => x.id === body.id);
+      if (idx === -1) return jsonResponse(404, { error: 'No encontrado' });
+      items[idx] = Object.assign({}, items[idx], body.patch || {});
+      await store.setJSON(coleccion, items);
+      return jsonResponse(200, { [itemKey]: items[idx] });
     }
 
     if (event.httpMethod === 'DELETE') {
-      materiales = materiales.filter(x => x.id !== body.id);
-      await store.setJSON('materiales', materiales);
+      items = items.filter(x => x.id !== body.id);
+      await store.setJSON(coleccion, items);
       return jsonResponse(200, { ok: true });
     }
 
