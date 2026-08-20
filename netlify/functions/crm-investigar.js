@@ -18,7 +18,7 @@ Gráficas Mera es una imprenta industrial de A Coruña que trabaja con materiale
 - "Imprenta": impresión offset y digital — talonarios, dípticos, trípticos, revistas, tarjetas, papelería comercial, sellos, cartas/menús.
 - "Textil": personalización textil (serigrafía, DTF, sublimación), ropa laboral, uniformes y textil de eventos.
 
-Investiga la empresa cliente: a qué se dedica, qué necesidades de impresión, rotulación, textil o merchandising tendría por su actividad (por ejemplo: un restaurante necesita cartas/menús, cartelería y uniformes; una tienda necesita rótulo de fachada y vinilos de escaparate; una empresa de eventos necesita lonas, banderolas y merchandising; una oficina o notaría puede necesitar sellos y talonarios; un gimnasio puede necesitar textil personalizado), y si hay indicios de quién le imprime o rotula actualmente. Después evalúa el encaje con cada línea de Gráficas Mera.
+Investiga la empresa cliente: a qué se dedica, qué necesidades de impresión, rotulación, textil o merchandising tendría por su actividad (por ejemplo: un restaurante necesita cartas/menús, cartelería y uniformes; una tienda necesita rótulo de fachada y vinilos de escaparate; una empresa de eventos necesita lonas, banderolas y merchandising; una oficina o notaría puede necesitar sellos y talonarios; un gimnasio puede necesitar textil personalizado), y si hay indicios de quién le imprime o rotula actualmente. Averigua también, si hay datos públicos disponibles, el número aproximado de empleados y si la empresa tiene flota de vehículos (furgonetas, camiones, coches comerciales) y cuántos, ya que esto es relevante para textil laboral y rotulación de vehículos. Si no encuentras el dato, deja el campo vacío, no inventes cifras. Después evalúa el encaje con cada línea de Gráficas Mera.
 
 Devuelve JSON con este esquema exacto (usa "" o [] si no encuentras dato, nunca inventes):
 {
@@ -29,6 +29,8 @@ Devuelve JSON con este esquema exacto (usa "" o [] si no encuentras dato, nunca 
   "redes": "",
   "tipo_negocio": "",
   "categorias": [],
+  "numero_empleados": "",
+  "numero_vehiculos_flota": "",
   "proveedor_actual_detectado": [],
   "productos_detectados": [],
   "servicios": [],
@@ -112,6 +114,8 @@ Busca en internet información real y actual. Devuelve solo el JSON.`;
     if (result.redes) c.redes = result.redes;
     if (result.tipo_negocio) c.tipoNegocio = result.tipo_negocio;
     if (Array.isArray(result.categorias)) c.categorias = result.categorias;
+    if (result.numero_empleados) c.numeroEmpleados = result.numero_empleados;
+    if (result.numero_vehiculos_flota) c.numeroVehiculos = result.numero_vehiculos_flota;
     if (Array.isArray(result.proveedor_actual_detectado)) c.proveedorActual = result.proveedor_actual_detectado;
     if (Array.isArray(result.productos_detectados)) c.productosDetectados = result.productos_detectados;
     if (Array.isArray(result.servicios)) c.servicios = result.servicios;

@@ -516,6 +516,12 @@ function renderDetail(){
       ${fieldHtml(c.id,'novedades','Noticias / novedades', c.novedades, true)}
     </div>
 
+    <div class="sectionLabel">Empleados y flota</div>
+    <div class="fichaGrid">
+      ${fieldHtml(c.id,'numeroEmpleados','Nº de empleados', c.numeroEmpleados)}
+      ${fieldHtml(c.id,'numeroVehiculos','Nº de vehículos de flota', c.numeroVehiculos)}
+    </div>
+
     <div class="sectionLabel">Potencial por línea</div>
     <div class="field" id="potencialBars">${potBars}</div>
 

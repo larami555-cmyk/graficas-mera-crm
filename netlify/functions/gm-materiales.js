@@ -73,7 +73,7 @@ exports.handler = async (event) => {
         ? { nombre: '', categoria: '', especificaciones: '', notas: '' }
         : coleccion === 'productos' || coleccion === 'vehiculos'
           ? { nombre: '', categoria: '', variantes: '', especificaciones: '', notas: '' }
-          : { nombre: '', categoria: '', materialesCompatibles: '', tamanos: '', colores: '', varios: '' };
+          : { nombre: '', categoria: '', materialesUsados: [], tamanos: '', colores: '', varios: '' };
       const it = Object.assign({}, defaults, body[itemKey] || {});
       if (!it.nombre) return jsonResponse(400, { error: 'El nombre es obligatorio' });
       it.id = uid(prefix);

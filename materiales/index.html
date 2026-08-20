@@ -200,7 +200,10 @@
       <label>Máquinas que usa</label>
       <div id="checksMaquinas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
-    <div class="fld" id="fld_materialesCompatibles" style="display:none;"><label>Materiales</label><textarea id="f_materialesCompatibles" placeholder="Qué materiales trabaja esta máquina..."></textarea></div>
+    <div class="fld" id="fld_materialesCompatibles" style="display:none;">
+      <label>Materiales</label>
+      <div id="checksMaterialesMaquina" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
     <div class="fld" id="fld_tamanos" style="display:none;"><label>Tamaños</label><textarea id="f_tamanos" placeholder="Tamaño máximo/mínimo de trabajo, formatos admitidos..."></textarea></div>
     <div class="fld" id="fld_colores" style="display:none;"><label>Colores</label><textarea id="f_colores" placeholder="Colores o tintas disponibles en esta máquina..."></textarea></div>
     <div class="fld" id="fld_varios" style="display:none;"><label>Varios</label><textarea id="f_varios" placeholder="Cualquier otra cosa a tener en cuenta..."></textarea></div>
@@ -432,7 +435,7 @@ async function syncDefaultsFaltantes(coleccion, nombres){
     ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
     : coleccion === 'productos'
       ? (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' })
-      : (nombre) => ({ nombre, categoria: '', materialesCompatibles: '', tamanos: '', colores: '', varios: '' });
+      : (nombre) => ({ nombre, categoria: '', materialesUsados: [], tamanos: '', colores: '', varios: '' });
   for(const nombre of nombres){
     const existe = list.some(x => x.nombre.trim().toLowerCase() === nombre.toLowerCase());
     if(existe) continue;
@@ -450,7 +453,7 @@ async function seedDefaults(coleccion, nombres){
     ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
     : coleccion === 'productos'
       ? (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' })
-      : (nombre) => ({ nombre, categoria: '', materialesCompatibles: '', tamanos: '', colores: '', varios: '' });
+      : (nombre) => ({ nombre, categoria: '', materialesUsados: [], tamanos: '', colores: '', varios: '' });
   for(const nombre of nombres){
     try{
       const data = await apiCall('POST', coleccion, { [itemKey]: defaults(nombre) });
@@ -544,7 +547,7 @@ function renderGrid(){
           <div class="cardBtns"><button class="iconBtn" onclick="openEdit('${m.id}')">Editar</button></div>
         </div>
         <label>Materiales</label>
-        <div class="val ${m.materialesCompatibles?'':'empty'}">${m.materialesCompatibles ? escapeHtml(m.materialesCompatibles) : 'Sin datos todavía.'}</div>
+        <div class="chipRow">${(m.materialesUsados||[]).length ? m.materialesUsados.map(n=>`<span class="chip gm" style="cursor:pointer;" onclick="abrirMaterialPorNombre('${escapeHtml(n).replace(/'/g,"\\'")}')">${escapeHtml(n)}</span>`).join('') : `<span class="val empty">Sin datos todavía.</span>`}</div>
         <label>Tamaños</label>
         <div class="val ${m.tamanos?'':'empty'}">${m.tamanos ? escapeHtml(m.tamanos) : 'Sin datos todavía.'}</div>
         <label>Colores</label>
@@ -609,7 +612,6 @@ function openModal(){
   document.getElementById('f_categoria').value = '';
   document.getElementById('f_especificaciones').value = '';
   document.getElementById('f_variantes').value = '';
-  document.getElementById('f_materialesCompatibles').value = '';
   document.getElementById('f_tamanos').value = '';
   document.getElementById('f_colores').value = '';
   document.getElementById('f_varios').value = '';
@@ -617,6 +619,9 @@ function openModal(){
   if(currentTab === 'productos'){
     renderChecks('checksMateriales', materiales.map(m=>m.nombre), []);
     renderChecks('checksMaquinas', maquinas.map(m=>m.nombre), []);
+  }
+  if(currentTab === 'maquinas'){
+    renderChecks('checksMaterialesMaquina', materiales.map(m=>m.nombre), []);
   }
   setFieldVisibility();
   document.getElementById('deleteBtn').style.display = 'none';
@@ -634,7 +639,6 @@ function openEdit(id){
   document.getElementById('f_categoria').value = m.categoria || '';
   document.getElementById('f_especificaciones').value = m.especificaciones || '';
   document.getElementById('f_variantes').value = m.variantes || '';
-  document.getElementById('f_materialesCompatibles').value = m.materialesCompatibles || '';
   document.getElementById('f_tamanos').value = m.tamanos || '';
   document.getElementById('f_colores').value = m.colores || '';
   document.getElementById('f_varios').value = m.varios || '';
@@ -642,6 +646,9 @@ function openEdit(id){
   if(currentTab === 'productos'){
     renderChecks('checksMateriales', materiales.map(x=>x.nombre), m.materialesUsados || []);
     renderChecks('checksMaquinas', maquinas.map(x=>x.nombre), m.maquinasUsadas || []);
+  }
+  if(currentTab === 'maquinas'){
+    renderChecks('checksMaterialesMaquina', materiales.map(x=>x.nombre), m.materialesUsados || []);
   }
   setFieldVisibility();
   document.getElementById('deleteBtn').style.display = 'inline-block';
@@ -655,7 +662,7 @@ async function submitMaterial(){
   const itemKey = getItemKey();
   const payload = { nombre, categoria: document.getElementById('f_categoria').value };
   if(currentTab === 'maquinas'){
-    payload.materialesCompatibles = document.getElementById('f_materialesCompatibles').value.trim();
+    payload.materialesUsados = getChecked('checksMaterialesMaquina');
     payload.tamanos = document.getElementById('f_tamanos').value.trim();
     payload.colores = document.getElementById('f_colores').value.trim();
     payload.varios = document.getElementById('f_varios').value.trim();
@@ -774,6 +781,13 @@ function renderSearchAll(){
   `).join('')}</div>`;
 }
 document.getElementById('searchAllInput')?.addEventListener('input', renderSearchAll);
+
+function abrirMaterialPorNombre(nombre){
+  const mat = materiales.find(x => x.nombre === nombre);
+  if(!mat){ showToast('Ese material ya no existe.'); return; }
+  switchTab('materiales');
+  setTimeout(()=>openEdit(mat.id), 60);
+}
 
 function irAResultado(tipo, id){
   switchTab(tipo);

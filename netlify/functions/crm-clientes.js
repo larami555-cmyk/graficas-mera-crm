@@ -39,6 +39,7 @@ exports.handler = async (event) => {
       const c = Object.assign({
         nombre: '', localidad: '', direccion: '', telefono: '', web: '', redes: '',
         tipoNegocio: '', potencialGlobal: '', prioridad: '',
+        numeroEmpleados: '', numeroVehiculos: '',
         proveedorActual: [], productosDetectados: [], categorias: [], servicios: [],
         lineasGM: [], potencial: { laser: '', rotulacion: '', merchandising: '', imprenta: '', textil: '' },
         ultimaVisita: '', proximoSeguimiento: '', observaciones: '', historial: []
