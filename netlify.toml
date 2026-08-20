@@ -6,6 +6,9 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions."crm-investigar"]
+  timeout = 26
+
 [[redirects]]
   from = "/"
   to = "/crm/"

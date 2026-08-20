@@ -42,7 +42,7 @@ Devuelve JSON con este esquema exacto (usa "" o [] si no encuentras dato, nunca 
   "fuentes": [{"titulo":"","url":""}]
 }
 Los valores de "lineas_gm_adecuadas" deben ser exactamente, cuando apliquen: "Láser", "Rotulación", "Merchandising", "Imprenta", "Textil".
-Sé conciso. Máximo 6 elementos por lista.`;
+Sé rápido y directo: usa como máximo 2 búsquedas web (prioriza la web oficial de la empresa si existe, o su ficha en Google Maps/redes), y no sigas investigando una vez tengas lo esencial. Sé conciso. Máximo 6 elementos por lista.`;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return jsonResponse(405, { error: 'Método no soportado' });
@@ -86,7 +86,7 @@ Busca en internet información real y actual. Devuelve solo el JSON.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1800,
+        max_tokens: 1400,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }]
@@ -136,6 +136,6 @@ Busca en internet información real y actual. Devuelve solo el JSON.`;
 
     return jsonResponse(200, { cliente: c });
   } catch (err) {
-    return jsonResponse(500, { error: err.message || 'Error investigando el cliente' });
+    return jsonResponse(500, { error: err.message || 'Error investigando el cliente. Si tarda más de 10-15 segundos, puede deberse al límite de tiempo de Netlify — reintenta o considera pasar a plan Pro.' });
   }
 };
