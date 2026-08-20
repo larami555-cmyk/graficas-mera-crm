@@ -130,6 +130,7 @@
     <button class="tabBtn" id="tabMaquinas" onclick="switchTab('maquinas')">Máquinas</button>
     <button class="tabBtn" id="tabVehiculos" onclick="switchTab('vehiculos')">Rotulación de vehículos</button>
     <button class="tabBtn" id="tabNotas" onclick="switchTab('notas')">Cómo imprimimos</button>
+    <button class="tabBtn" id="tabNotasGenerales" onclick="switchTab('notasgenerales')">Notas</button>
   </div>
 
   <div id="controls">
@@ -149,7 +150,7 @@
   <div id="grid"></div>
 
   <div id="notesPanel" style="display:none;">
-    <p style="color:var(--paper-dim);font-size:12.5px;margin:0 0 12px;">Espacio libre para tus propios comentarios: procesos, trucos, cosas a recordar de cómo imprimís cada cosa.</p>
+    <p id="notesIntro" style="color:var(--paper-dim);font-size:12.5px;margin:0 0 12px;">Espacio libre para tus propios comentarios: procesos, trucos, cosas a recordar de cómo imprimís cada cosa.</p>
     <textarea id="notesTextarea" placeholder="Escribe aquí tus notas sobre cómo imprimimos..." style="width:100%;min-height:400px;background:var(--steel-850);border:1px solid var(--line);border-radius:5px;padding:16px;color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;resize:vertical;"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
       <span id="notesSavedLabel" style="font-size:12px;color:var(--paper-dim);"></span>
@@ -283,7 +284,7 @@ async function syncCatalogoMateriales(){
 }
 
 // ---------- TABS ----------
-let notasCargadas = false;
+let notasCargadasPor = {};
 
 function switchTab(tab){
   currentTab = tab;
@@ -292,14 +293,22 @@ function switchTab(tab){
   document.getElementById('tabMaquinas').classList.toggle('active', tab==='maquinas');
   document.getElementById('tabVehiculos').classList.toggle('active', tab==='vehiculos');
   document.getElementById('tabNotas').classList.toggle('active', tab==='notas');
+  document.getElementById('tabNotasGenerales').classList.toggle('active', tab==='notasgenerales');
 
-  const esNotas = tab === 'notas';
+  const esNotas = tab === 'notas' || tab === 'notasgenerales';
   document.getElementById('controls').style.display = esNotas ? 'none' : 'flex';
   document.getElementById('grid').style.display = esNotas ? 'none' : 'grid';
   document.getElementById('notesPanel').style.display = esNotas ? 'block' : 'none';
 
   if(esNotas){
-    if(!notasCargadas) loadNotas();
+    const intros = {
+      notas: 'Espacio libre para tus propios comentarios: procesos, trucos, cosas a recordar de cómo imprimís cada cosa.',
+      notasgenerales: 'Espacio libre para cualquier otra nota que quieras guardar.'
+    };
+    document.getElementById('notesIntro').textContent = intros[tab];
+    document.getElementById('notesTextarea').placeholder = tab === 'notas' ? 'Escribe aquí tus notas sobre cómo imprimimos...' : 'Escribe aquí lo que quieras...';
+    if(!notasCargadasPor[tab]) loadNotas(tab);
+    else document.getElementById('notesTextarea').value = notasCargadasPor[tab];
     return;
   }
   const labels = { materiales: '+ Añadir material', productos: '+ Añadir producto', maquinas: '+ Añadir máquina', vehiculos: '+ Añadir vehículo' };
@@ -308,19 +317,21 @@ function switchTab(tab){
   renderGrid();
 }
 
-async function loadNotas(){
+async function loadNotas(coleccion){
   try{
-    const r = await fetch(`${FN_MATERIALES}?coleccion=notas`, { headers: { 'x-crm-password': crmPassword } });
+    const r = await fetch(`${FN_MATERIALES}?coleccion=${coleccion}`, { headers: { 'x-crm-password': crmPassword } });
     const data = await r.json();
-    document.getElementById('notesTextarea').value = data.texto || '';
-    notasCargadas = true;
+    notasCargadasPor[coleccion] = data.texto || '';
+    if(currentTab === coleccion) document.getElementById('notesTextarea').value = data.texto || '';
   }catch(err){ showToast('No se pudieron cargar las notas.'); }
 }
 
 async function saveNotas(){
   const texto = document.getElementById('notesTextarea').value;
+  const coleccion = currentTab;
   try{
-    await apiCall('PUT', 'notas', { texto });
+    await apiCall('PUT', coleccion, { texto });
+    notasCargadasPor[coleccion] = texto;
     document.getElementById('notesSavedLabel').textContent = 'Guardado ' + new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
     showToast('Notas guardadas.');
   }catch(err){ showToast('No se pudo guardar: ' + err.message); }

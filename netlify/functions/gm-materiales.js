@@ -25,7 +25,8 @@ exports.handler = async (event) => {
 
   const coleccion = (event.queryStringParameters && event.queryStringParameters.coleccion) || body.coleccion || 'materiales';
   const COLECCIONES_LISTA = ['materiales', 'productos', 'maquinas', 'vehiculos'];
-  if (!COLECCIONES_LISTA.includes(coleccion) && coleccion !== 'notas') {
+  const COLECCIONES_NOTAS = ['notas', 'notasgenerales'];
+  if (!COLECCIONES_LISTA.includes(coleccion) && !COLECCIONES_NOTAS.includes(coleccion)) {
     return jsonResponse(400, { error: 'Colección no válida' });
   }
 
@@ -35,16 +36,18 @@ exports.handler = async (event) => {
     token: process.env.BLOBS_ACCESS_TOKEN
   });
 
-  // "notas" es un texto libre único (la pestaña "Cómo imprimimos"), no una lista de fichas
-  if (coleccion === 'notas') {
+  // texto libre (cuadernos de notas), no son listas de fichas
+  const CUADERNOS = { 'notas': 'notas-comoimprimimos', 'notasgenerales': 'notas-generales' };
+  if (CUADERNOS[coleccion]) {
+    const storageKey = CUADERNOS[coleccion];
     try {
       if (event.httpMethod === 'GET') {
-        const texto = (await store.get('notas-comoimprimimos')) || '';
+        const texto = (await store.get(storageKey)) || '';
         return jsonResponse(200, { texto });
       }
       if (event.httpMethod === 'PUT' || event.httpMethod === 'POST') {
         const texto = body.texto || '';
-        await store.set('notas-comoimprimimos', texto);
+        await store.set(storageKey, texto);
         return jsonResponse(200, { texto });
       }
       return jsonResponse(405, { error: 'Método no soportado' });
