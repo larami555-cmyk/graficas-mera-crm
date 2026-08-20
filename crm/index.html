@@ -173,7 +173,13 @@
   <div id="loginBox">
     <div class="eyebrow">Gráficas Mera</div>
     <h1 class="display">Inteligencia Comercial</h1>
-    <input id="loginInput" type="password" placeholder="Contraseña de acceso" autocomplete="current-password">
+    <div style="position:relative;">
+      <input id="loginInput" type="password" placeholder="Contraseña de acceso" autocomplete="current-password" style="padding-right:44px;">
+      <button type="button" onclick="togglePasswordVisibility()" aria-label="Mostrar contraseña"
+        style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;cursor:pointer;color:var(--paper-dim);width:auto;font-size:16px;line-height:1;">
+        <span id="eyeIcon">👁</span>
+      </button>
+    </div>
     <button onclick="tryLogin()">Entrar</button>
     <div id="loginError"></div>
   </div>
@@ -229,6 +235,17 @@ let editingField = null;
 let crmPassword = null;
 
 // ---------- LOGIN ----------
+function togglePasswordVisibility(){
+  const input = document.getElementById('loginInput');
+  const icon = document.getElementById('eyeIcon');
+  if(input.type === 'password'){
+    input.type = 'text';
+    icon.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    icon.textContent = '👁';
+  }
+}
 function tryLogin(){
   const val = document.getElementById('loginInput').value;
   if(!val){ return; }
