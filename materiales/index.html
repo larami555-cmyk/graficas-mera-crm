@@ -204,11 +204,25 @@ async function attemptLoad(fromLoginForm){
     localStorage.setItem('gm_crm_pass', crmPassword);
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').classList.add('ready');
+    if(materiales.length === 0){
+      await seedDefaultMaterials();
+    }
     renderGrid();
   }catch(err){
     errEl.textContent = 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.';
   }
 }
+
+async function seedDefaultMaterials(){
+  const nombres = ['PVC','Cartón pluma','Aluminio','Metacrilato','Madera','Lona','Vinilo','Glass pack'];
+  for(const nombre of nombres){
+    try{
+      const data = await apiCall('POST', { material: { nombre, categoria: '', especificaciones: '', notas: '' } });
+      materiales.unshift(data.material);
+    }catch(err){ /* si falla uno, seguimos con el resto */ }
+  }
+}
+
 (function initLogin(){
   const saved = localStorage.getItem('gm_crm_pass');
   if(saved){ crmPassword = saved; attemptLoad(false); }
