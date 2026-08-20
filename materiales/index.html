@@ -127,6 +127,7 @@
   <div id="tabs" style="display:flex;gap:8px;margin-bottom:20px;">
     <button class="tabBtn active" id="tabMateriales" onclick="switchTab('materiales')">Materiales</button>
     <button class="tabBtn" id="tabProductos" onclick="switchTab('productos')">Productos</button>
+    <button class="tabBtn" id="tabMaquinas" onclick="switchTab('maquinas')">Máquinas</button>
   </div>
 
   <div id="controls">
@@ -162,8 +163,9 @@
         <option value="General">General</option>
       </select>
     </div>
-    <div class="fld"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Grosores disponibles, formatos/tamaños estándar, acabados, colores, compatibilidad de impresión..."></textarea></div>
+    <div class="fld"><label>Especificaciones</label><textarea id="f_especificaciones" placeholder="Según el elemento: grosores, formatos, acabados, capacidades técnicas, velocidad, tamaño de trabajo..."></textarea></div>
     <div class="fld" id="fld_variantes" style="display:none;"><label>Variantes</label><textarea id="f_variantes" placeholder="Tamaños, número de copias, autocopiativo o no, encuadernado, acabados posibles..."></textarea></div>
+    <div class="fld" id="fld_materialesCompatibles" style="display:none;"><label>Materiales compatibles</label><textarea id="f_materialesCompatibles" placeholder="Qué materiales y espesores admite esta máquina..."></textarea></div>
     <div class="fld"><label>Notas</label><textarea id="f_notas" placeholder="Notas técnicas, proveedores, tiempos de producción..."></textarea></div>
     <div class="modalBtns">
       <button class="action danger" id="deleteBtn" style="display:none;" onclick="deleteMaterial()">Eliminar</button>
@@ -181,12 +183,14 @@
 const FN_MATERIALES = '/.netlify/functions/gm-materiales';
 let materiales = [];
 let productos = [];
+let maquinas = [];
 let currentTab = 'materiales';
 let crmPassword = null;
 let editingId = null;
 
 const PRODUCTOS_DEFAULT = ['Talonarios','Revistas','Monítico','Cartelería','Neones','Sellos','Banderolas','Loterías','Cartas y menús'];
 const MATERIALES_DEFAULT = ['PVC','Cartón pluma','Aluminio','Metacrilato','Madera','Lona','Vinilo','Glass pack'];
+const MAQUINAS_DEFAULT = ['Máquina plana'];
 
 // Catálogo técnico Endutex (materiales técnicos rígidos) - se usa para rellenar huecos vacíos, nunca pisa lo ya escrito
 const CATALOGO_MATERIALES = {
@@ -268,7 +272,9 @@ function switchTab(tab){
   currentTab = tab;
   document.getElementById('tabMateriales').classList.toggle('active', tab==='materiales');
   document.getElementById('tabProductos').classList.toggle('active', tab==='productos');
-  document.getElementById('addBtn').textContent = tab==='materiales' ? '+ Añadir material' : '+ Añadir producto';
+  document.getElementById('tabMaquinas').classList.toggle('active', tab==='maquinas');
+  const labels = { materiales: '+ Añadir material', productos: '+ Añadir producto', maquinas: '+ Añadir máquina' };
+  document.getElementById('addBtn').textContent = labels[tab];
   renderCategoryFilter();
   renderGrid();
 }
@@ -306,11 +312,13 @@ async function attemptLoad(fromLoginForm){
   try{
     materiales = await fetchColeccion('materiales');
     productos = await fetchColeccion('productos');
+    maquinas = await fetchColeccion('maquinas');
     localStorage.setItem('gm_crm_pass', crmPassword);
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').classList.add('ready');
     if(materiales.length === 0){ await seedDefaults('materiales', MATERIALES_DEFAULT); }
     if(productos.length === 0){ await seedDefaults('productos', PRODUCTOS_DEFAULT); }
+    if(maquinas.length === 0){ await seedDefaults('maquinas', MAQUINAS_DEFAULT); }
     await syncCatalogoMateriales();
     renderGrid();
   }catch(err){
@@ -324,14 +332,17 @@ async function attemptLoad(fromLoginForm){
 }
 
 async function seedDefaults(coleccion, nombres){
-  const target = coleccion === 'materiales' ? materiales : productos;
+  const target = coleccion === 'materiales' ? materiales : coleccion === 'productos' ? productos : maquinas;
+  const itemKey = coleccion === 'materiales' ? 'material' : coleccion === 'productos' ? 'producto' : 'maquina';
   const defaults = coleccion === 'materiales'
     ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
-    : (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' });
+    : coleccion === 'productos'
+      ? (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' })
+      : (nombre) => ({ nombre, categoria: '', especificaciones: '', materialesCompatibles: '', notas: '' });
   for(const nombre of nombres){
     try{
-      const data = await apiCall('POST', coleccion, { [coleccion==='materiales'?'material':'producto']: defaults(nombre) });
-      target.unshift(data[coleccion==='materiales'?'material':'producto']);
+      const data = await apiCall('POST', coleccion, { [itemKey]: defaults(nombre) });
+      target.unshift(data[itemKey]);
     }catch(err){ /* si falla uno, seguimos con el resto */ }
   }
 }
@@ -364,20 +375,27 @@ async function apiCall(method, coleccion, payload){
   return data;
 }
 
+function getCurrentList(){
+  return currentTab === 'materiales' ? materiales : currentTab === 'productos' ? productos : maquinas;
+}
+function getItemKey(){
+  return currentTab === 'materiales' ? 'material' : currentTab === 'productos' ? 'producto' : 'maquina';
+}
+
 // ---------- GRID ----------
 function renderGrid(){
   const grid = document.getElementById('grid');
-  const list = currentTab === 'materiales' ? materiales : productos;
+  const list = getCurrentList();
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
   const cat = document.getElementById('categoryFilter').value;
   const filtered = list.filter(m=>{
-    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q) || (m.variantes||'').toLowerCase().includes(q);
+    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q) || (m.variantes||'').toLowerCase().includes(q) || (m.materialesCompatibles||'').toLowerCase().includes(q);
     const matchCat = !cat || m.categoria === cat;
     return matchQ && matchCat;
   });
   if(filtered.length===0){
-    const label = currentTab === 'materiales' ? 'material' : 'producto';
-    grid.innerHTML = `<div id="emptyList" style="grid-column:1/-1;">${list.length===0 ? `Todavía no hay ${label}es. Añade el primero con "+ Añadir ${label}".` : 'Sin resultados para ese filtro.'}</div>`;
+    const label = currentTab === 'materiales' ? 'material' : currentTab === 'productos' ? 'producto' : 'máquina';
+    grid.innerHTML = `<div id="emptyList" style="grid-column:1/-1;">${list.length===0 ? `Todavía no hay ${label}s. Añade el primero con "+ Añadir ${label}".` : 'Sin resultados para ese filtro.'}</div>`;
     return;
   }
   grid.innerHTML = filtered.map(m=>`
@@ -394,6 +412,7 @@ function renderGrid(){
       ${currentTab==='productos' ? `<label>Variantes</label><div class="val ${m.variantes?'':'empty'}">${m.variantes ? escapeHtml(m.variantes) : 'Sin variantes todavía.'}</div>` : ''}
       <label>Especificaciones</label>
       <div class="val ${m.especificaciones?'':'empty'}">${m.especificaciones ? escapeHtml(m.especificaciones) : 'Sin especificaciones todavía.'}</div>
+      ${currentTab==='maquinas' ? `<label>Materiales compatibles</label><div class="val ${m.materialesCompatibles?'':'empty'}">${m.materialesCompatibles ? escapeHtml(m.materialesCompatibles) : 'Sin datos todavía.'}</div>` : ''}
       ${m.notas ? `<label>Notas</label><div class="val">${escapeHtml(m.notas)}</div>` : ''}
     </div>
   `).join('');
@@ -402,29 +421,35 @@ function renderGrid(){
 // ---------- MODAL ----------
 function openModal(){
   editingId = null;
-  document.getElementById('modalTitle').textContent = currentTab==='materiales' ? 'Nuevo material' : 'Nuevo producto';
+  const titles = { materiales: 'Nuevo material', productos: 'Nuevo producto', maquinas: 'Nueva máquina' };
+  document.getElementById('modalTitle').textContent = titles[currentTab];
   document.getElementById('f_nombre').value = '';
   document.getElementById('f_categoria').value = '';
   document.getElementById('f_especificaciones').value = '';
   document.getElementById('f_variantes').value = '';
+  document.getElementById('f_materialesCompatibles').value = '';
   document.getElementById('f_notas').value = '';
   document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
+  document.getElementById('fld_materialesCompatibles').style.display = currentTab==='maquinas' ? 'block' : 'none';
   document.getElementById('deleteBtn').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('f_nombre').focus(),50);
 }
 function openEdit(id){
-  const list = currentTab === 'materiales' ? materiales : productos;
+  const list = getCurrentList();
   const m = list.find(x=>x.id===id);
   if(!m) return;
   editingId = id;
-  document.getElementById('modalTitle').textContent = currentTab==='materiales' ? 'Editar material' : 'Editar producto';
+  const titles = { materiales: 'Editar material', productos: 'Editar producto', maquinas: 'Editar máquina' };
+  document.getElementById('modalTitle').textContent = titles[currentTab];
   document.getElementById('f_nombre').value = m.nombre || '';
   document.getElementById('f_categoria').value = m.categoria || '';
   document.getElementById('f_especificaciones').value = m.especificaciones || '';
   document.getElementById('f_variantes').value = m.variantes || '';
+  document.getElementById('f_materialesCompatibles').value = m.materialesCompatibles || '';
   document.getElementById('f_notas').value = m.notas || '';
   document.getElementById('fld_variantes').style.display = currentTab==='productos' ? 'block' : 'none';
+  document.getElementById('fld_materialesCompatibles').style.display = currentTab==='maquinas' ? 'block' : 'none';
   document.getElementById('deleteBtn').style.display = 'inline-block';
   document.getElementById('modalOverlay').classList.add('show');
 }
@@ -433,7 +458,7 @@ function closeModal(){ document.getElementById('modalOverlay').classList.remove(
 async function submitMaterial(){
   const nombre = document.getElementById('f_nombre').value.trim();
   if(!nombre){ showToast('El nombre es obligatorio.'); return; }
-  const itemKey = currentTab==='materiales' ? 'material' : 'producto';
+  const itemKey = getItemKey();
   const payload = {
     nombre,
     categoria: document.getElementById('f_categoria').value,
@@ -441,17 +466,19 @@ async function submitMaterial(){
     notas: document.getElementById('f_notas').value.trim()
   };
   if(currentTab==='productos') payload.variantes = document.getElementById('f_variantes').value.trim();
+  if(currentTab==='maquinas') payload.materialesCompatibles = document.getElementById('f_materialesCompatibles').value.trim();
   try{
-    const list = currentTab === 'materiales' ? materiales : productos;
+    const list = getCurrentList();
+    const labels = { materiales: 'Material', productos: 'Producto', maquinas: 'Máquina' };
     if(editingId){
       const data = await apiCall('PUT', currentTab, { id: editingId, patch: payload });
       const idx = list.findIndex(x=>x.id===editingId);
       if(idx>-1) list[idx] = data[itemKey];
-      showToast(currentTab==='materiales' ? 'Material actualizado.' : 'Producto actualizado.');
+      showToast(labels[currentTab] + ' actualizado.');
     } else {
       const data = await apiCall('POST', currentTab, { [itemKey]: payload });
       list.unshift(data[itemKey]);
-      showToast(currentTab==='materiales' ? 'Material añadido.' : 'Producto añadido.');
+      showToast(labels[currentTab] + ' añadido.');
     }
     closeModal();
     renderGrid();
@@ -464,7 +491,8 @@ async function deleteMaterial(){
   try{
     await apiCall('DELETE', currentTab, { id: editingId });
     if(currentTab === 'materiales') materiales = materiales.filter(x=>x.id!==editingId);
-    else productos = productos.filter(x=>x.id!==editingId);
+    else if(currentTab === 'productos') productos = productos.filter(x=>x.id!==editingId);
+    else maquinas = maquinas.filter(x=>x.id!==editingId);
     closeModal();
     renderGrid();
     showToast('Eliminado.');

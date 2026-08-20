@@ -24,11 +24,11 @@ exports.handler = async (event) => {
   }
 
   const coleccion = (event.queryStringParameters && event.queryStringParameters.coleccion) || body.coleccion || 'materiales';
-  if (coleccion !== 'materiales' && coleccion !== 'productos') {
+  if (coleccion !== 'materiales' && coleccion !== 'productos' && coleccion !== 'maquinas') {
     return jsonResponse(400, { error: 'Colección no válida' });
   }
-  const prefix = coleccion === 'materiales' ? 'm' : 'p';
-  const itemKey = coleccion === 'materiales' ? 'material' : 'producto';
+  const prefix = coleccion === 'materiales' ? 'm' : coleccion === 'productos' ? 'p' : 'q';
+  const itemKey = coleccion === 'materiales' ? 'material' : coleccion === 'productos' ? 'producto' : 'maquina';
 
   const store = getStore({
     name: 'gm-materiales-data',
@@ -45,7 +45,9 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'POST') {
       const defaults = coleccion === 'materiales'
         ? { nombre: '', categoria: '', especificaciones: '', notas: '' }
-        : { nombre: '', categoria: '', variantes: '', especificaciones: '', notas: '' };
+        : coleccion === 'productos'
+          ? { nombre: '', categoria: '', variantes: '', especificaciones: '', notas: '' }
+          : { nombre: '', categoria: '', especificaciones: '', materialesCompatibles: '', notas: '' };
       const it = Object.assign({}, defaults, body[itemKey] || {});
       if (!it.nombre) return jsonResponse(400, { error: 'El nombre es obligatorio' });
       it.id = uid(prefix);
