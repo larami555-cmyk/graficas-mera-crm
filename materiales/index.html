@@ -190,7 +190,7 @@ let editingId = null;
 
 const PRODUCTOS_DEFAULT = ['Talonarios','Revistas','Monítico','Cartelería','Neones','Sellos','Banderolas','Loterías','Cartas y menús'];
 const MATERIALES_DEFAULT = ['PVC','Cartón pluma','Aluminio','Metacrilato','Madera','Lona','Vinilo','Glass pack'];
-const MAQUINAS_DEFAULT = ['Máquina plana'];
+const MAQUINAS_DEFAULT = ['Máquina plana','Troqueladora','Plotter','Grabado láser','Textil','Stamping','Fresadora','Máquina digital'];
 
 // Catálogo técnico Endutex (materiales técnicos rígidos) - se usa para rellenar huecos vacíos, nunca pisa lo ya escrito
 const CATALOGO_MATERIALES = {
@@ -318,7 +318,7 @@ async function attemptLoad(fromLoginForm){
     document.getElementById('app').classList.add('ready');
     if(materiales.length === 0){ await seedDefaults('materiales', MATERIALES_DEFAULT); }
     if(productos.length === 0){ await seedDefaults('productos', PRODUCTOS_DEFAULT); }
-    if(maquinas.length === 0){ await seedDefaults('maquinas', MAQUINAS_DEFAULT); }
+    await syncDefaultsFaltantes('maquinas', MAQUINAS_DEFAULT);
     await syncCatalogoMateriales();
     renderGrid();
   }catch(err){
@@ -328,6 +328,24 @@ async function attemptLoad(fromLoginForm){
     } else {
       errEl.textContent = 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.';
     }
+  }
+}
+
+async function syncDefaultsFaltantes(coleccion, nombres){
+  const list = coleccion === 'materiales' ? materiales : coleccion === 'productos' ? productos : maquinas;
+  const itemKey = coleccion === 'materiales' ? 'material' : coleccion === 'productos' ? 'producto' : 'maquina';
+  const defaults = coleccion === 'materiales'
+    ? (nombre) => ({ nombre, categoria: '', especificaciones: '', notas: '' })
+    : coleccion === 'productos'
+      ? (nombre) => ({ nombre, categoria: '', variantes: '', especificaciones: '', notas: '' })
+      : (nombre) => ({ nombre, categoria: '', especificaciones: '', materialesCompatibles: '', notas: '' });
+  for(const nombre of nombres){
+    const existe = list.some(x => x.nombre.trim().toLowerCase() === nombre.toLowerCase());
+    if(existe) continue;
+    try{
+      const data = await apiCall('POST', coleccion, { [itemKey]: defaults(nombre) });
+      list.unshift(data[itemKey]);
+    }catch(err){ /* seguimos con el resto si falla uno */ }
   }
 }
 
