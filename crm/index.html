@@ -10,25 +10,25 @@
 <link rel="icon" type="image/png" sizes="16x16" href="./images/icon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./images/icon-180.png">
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#14171a">
+<meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GM CRM">
-<meta name="msapplication-TileColor" content="#14171a">
+<meta name="msapplication-TileColor" content="#0d0d0d">
 <meta name="msapplication-TileImage" content="./images/icon-152.png">
 <meta name="msapplication-config" content="./browserconfig.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --steel-950:#14171a; --steel-900:#1b1f23; --steel-850:#21262b; --steel-800:#272d33;
-    --steel-700:#333b42; --steel-600:#454f57; --line:#3a4149;
-    --paper:#eef1f3; --paper-dim:#a3aeb6; --ink:#d6483f; --ink-dim:#9c342c;
-    --cyan:#4fb0c6; --cyan-dim:#204048; --amber:#e0a53e; --amber-dim:#4a3a1c;
+    --steel-950:#0d0d0d; --steel-900:#161616; --steel-850:#1c1c1c; --steel-800:#242424;
+    --steel-700:#333333; --steel-600:#454545; --line:#2c2c2c;
+    --paper:#f5f5f2; --paper-dim:#a8a8a4; --ink:#d93395; --ink-dim:#a12571;
+    --cyan:#5effaf; --cyan-dim:#204a38; --amber:#e0a53e; --amber-dim:#4a3a1c;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;}
   body{background:var(--steel-950);color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
-  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  h1,h2,h3,.display{font-family:'Archivo Black',sans-serif; letter-spacing:-.01em;}
   .mono{font-family:'IBM Plex Mono',monospace;}
   ::selection{background:var(--ink-dim);color:#fff;}
 
@@ -43,7 +43,7 @@
 
   #newClientBtn{margin:16px 20px 12px;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:11px 14px;
     font-family:'Inter',sans-serif;font-weight:600;font-size:13px;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s ease;}
-  #newClientBtn:hover{background:#e2564d;}
+  #newClientBtn:hover{background:#f04dae;}
   #newClientBtn .plus{font-size:16px;line-height:1;}
 
   #searchWrap{padding:0 20px 10px;}
@@ -60,7 +60,7 @@
   .clientCard .localidad{font-size:11.5px;color:var(--paper-dim);margin-top:2px;}
   .badge{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:20px;white-space:nowrap;}
   .badge.alta{background:var(--amber-dim);color:#f0c67c;}
-  .badge.media{background:var(--cyan-dim);color:#a7d8e3;}
+  .badge.media{background:var(--cyan-dim);color:#a8f0cf;}
   .badge.baja{background:var(--steel-700);color:var(--paper-dim);}
   .badge.sin{background:var(--steel-800);color:var(--paper-dim);border:1px dashed var(--line);}
   #emptyList{padding:30px 10px;text-align:center;color:var(--paper-dim);font-size:12.5px;line-height:1.5;}
@@ -83,7 +83,7 @@
     background:var(--steel-850);color:var(--paper);white-space:nowrap;transition:border-color .15s ease, background .15s ease;}
   button.action:hover{border-color:var(--ink-dim);}
   button.action.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
-  button.action.primary:hover{background:#e2564d;}
+  button.action.primary:hover{background:#f04dae;}
   button.action.danger{color:#e79a86;}
   button.action.danger:hover{border-color:var(--ink);}
   button.action:disabled{opacity:.5;cursor:default;}
@@ -105,7 +105,7 @@
 
   .chipRow{display:flex;flex-wrap:wrap;gap:6px;}
   .chip{background:var(--steel-800);border:1px solid var(--line);color:var(--paper);font-size:12px;padding:4px 10px;border-radius:20px;}
-  .chip.gm{background:var(--cyan-dim);border-color:var(--cyan);color:#c3e6ee;}
+  .chip.gm{background:var(--cyan-dim);border-color:var(--cyan);color:#c3f5dd;}
 
   #potencialBars{display:flex;flex-direction:column;gap:10px;}
   .potRow{display:flex;align-items:center;gap:12px;}
@@ -151,7 +151,7 @@
   #loginBox input{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:12px 14px;color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;text-align:center;margin-bottom:12px;}
   #loginBox input:focus{outline:none;border-color:var(--ink-dim);}
   #loginBox button{width:100%;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;}
-  #loginBox button:hover{background:#e2564d;}
+  #loginBox button:hover{background:#f04dae;}
   #loginError{color:#e79a86;font-size:12.5px;margin-top:12px;min-height:16px;}
 
   @media (max-width: 820px){
@@ -219,7 +219,7 @@
 <div id="toast"></div>
 
 <script>
-const GM_LINEAS = ["Gran formato","Rotulación y señalética","Impresión offset y digital","Sellos y productos especiales"];
+const GM_LINEAS = ["Láser","Rotulación","Merchandising","Imprenta","Textil"];
 const FN_CLIENTES = '/.netlify/functions/crm-clientes';
 const FN_INVESTIGAR = '/.netlify/functions/crm-investigar';
 
@@ -426,7 +426,7 @@ function renderDetail(){
   const c = getClient(activeId);
   if(!c){ document.getElementById('detail').style.display='none'; document.getElementById('emptyMain').style.display='flex'; return; }
 
-  const potLabels = {granFormato:'Gran formato', rotulacion:'Rotulación y señal.', impresion:'Impresión offset/digital', sellosEspeciales:'Sellos y especiales'};
+  const potLabels = {laser:'Láser', rotulacion:'Rotulación', merchandising:'Merchandising', imprenta:'Imprenta', textil:'Textil'};
   const potLevel = v => ({Alto:100,Medio:60,Bajo:30,Nulo:6}[v] || 4);
   const potColor = v => v==='Alto' ? 'var(--cyan)' : v==='Medio' ? 'var(--ink)' : v==='Bajo' ? 'var(--paper-dim)' : 'var(--line)';
 

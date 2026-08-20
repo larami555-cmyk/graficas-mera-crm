@@ -40,7 +40,7 @@ exports.handler = async (event) => {
         nombre: '', localidad: '', direccion: '', telefono: '', web: '', redes: '',
         tipoNegocio: '', potencialGlobal: '', prioridad: '',
         proveedorActual: [], productosDetectados: [], categorias: [], servicios: [],
-        lineasGM: [], potencial: { granFormato: '', rotulacion: '', impresion: '', sellosEspeciales: '' },
+        lineasGM: [], potencial: { laser: '', rotulacion: '', merchandising: '', imprenta: '', textil: '' },
         ultimaVisita: '', proximoSeguimiento: '', observaciones: '', historial: []
       }, body.cliente || {});
       if (!c.nombre || !c.localidad) return jsonResponse(400, { error: 'Nombre y localidad son obligatorios' });

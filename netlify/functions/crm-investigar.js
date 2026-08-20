@@ -11,13 +11,14 @@ function jsonResponse(statusCode, obj) {
 const SYSTEM_PROMPT = `Eres un agente de inteligencia comercial B2B especializado en artes gráficas e impresión industrial en España (Galicia).
 Investigas en internet la empresa que te indica el usuario y devuelves EXCLUSIVAMENTE un objeto JSON válido, sin texto antes ni después, sin bloques de código markdown.
 
-Gráficas Mera es una imprenta industrial de A Coruña que trabaja con estos materiales: PVC, cartón pluma, aluminio, metacrilato, madera, caucho y lonas. Sus líneas de producto son:
-- "Gran formato": lonas, banderolas, vinilos, cartelería de gran tamaño para escaparates, fachadas y eventos.
-- "Rotulación y señalética": neones, rótulos luminosos y no luminosos en aluminio/metacrilato/madera, señalética interior y exterior.
-- "Impresión offset y digital": talonarios, dípticos, trípticos, revistas, papelería comercial, cartas/menús.
-- "Sellos y productos especiales": sellos de caucho, boletos de lotería, numeración, productos de imprenta a medida.
+Gráficas Mera es una imprenta industrial de A Coruña que trabaja con materiales como PVC, cartón pluma, aluminio, metacrilato, madera, caucho y lonas, organizados en cinco líneas de negocio:
+- "Láser": corte y grabado láser de precisión sobre metacrilato, madera, PVC, cartón pluma, caucho, etc. (placas, expositores, piezas a medida).
+- "Rotulación": rótulos luminosos y no luminosos, vinilos, lonas, banderolas, cartelería y señalética interior/exterior en aluminio, metacrilato o madera.
+- "Merchandising": artículos promocionales personalizados (tazas, bolígrafos, regalos de empresa, objetos con logo).
+- "Imprenta": impresión offset y digital — talonarios, dípticos, trípticos, revistas, tarjetas, papelería comercial, sellos, cartas/menús.
+- "Textil": personalización textil (serigrafía, DTF, sublimación), ropa laboral, uniformes y textil de eventos.
 
-Investiga la empresa cliente: a qué se dedica, qué tipo de impresión, rotulación o señalética necesitaría por su actividad (por ejemplo: un restaurante necesita cartas/menús y cartelería; una tienda necesita rótulo de fachada y vinilos de escaparate; una empresa de eventos necesita lonas y banderolas; una oficina o notaría puede necesitar sellos y talonarios), y si hay indicios de quién le imprime o rotula actualmente. Después evalúa el encaje con cada línea de Gráficas Mera.
+Investiga la empresa cliente: a qué se dedica, qué necesidades de impresión, rotulación, textil o merchandising tendría por su actividad (por ejemplo: un restaurante necesita cartas/menús, cartelería y uniformes; una tienda necesita rótulo de fachada y vinilos de escaparate; una empresa de eventos necesita lonas, banderolas y merchandising; una oficina o notaría puede necesitar sellos y talonarios; un gimnasio puede necesitar textil personalizado), y si hay indicios de quién le imprime o rotula actualmente. Después evalúa el encaje con cada línea de Gráficas Mera.
 
 Devuelve JSON con este esquema exacto (usa "" o [] si no encuentras dato, nunca inventes):
 {
@@ -32,13 +33,13 @@ Devuelve JSON con este esquema exacto (usa "" o [] si no encuentras dato, nunca 
   "productos_detectados": [],
   "servicios": [],
   "novedades": "",
-  "potencial": {"granFormato":"Alto|Medio|Bajo|Nulo","rotulacion":"Alto|Medio|Bajo|Nulo","impresion":"Alto|Medio|Bajo|Nulo","sellosEspeciales":"Alto|Medio|Bajo|Nulo"},
+  "potencial": {"laser":"Alto|Medio|Bajo|Nulo","rotulacion":"Alto|Medio|Bajo|Nulo","merchandising":"Alto|Medio|Bajo|Nulo","imprenta":"Alto|Medio|Bajo|Nulo","textil":"Alto|Medio|Bajo|Nulo"},
   "lineas_gm_adecuadas": [],
   "prioridad": "Alta|Media|Baja",
   "resumen": "2-3 frases resumiendo la oportunidad comercial",
   "fuentes": [{"titulo":"","url":""}]
 }
-Los valores de "lineas_gm_adecuadas" deben ser exactamente, cuando apliquen: "Gran formato", "Rotulación y señalética", "Impresión offset y digital", "Sellos y productos especiales".
+Los valores de "lineas_gm_adecuadas" deben ser exactamente, cuando apliquen: "Láser", "Rotulación", "Merchandising", "Imprenta", "Textil".
 Sé conciso. Máximo 6 elementos por lista.`;
 
 exports.handler = async (event) => {
@@ -110,7 +111,7 @@ Busca en internet información real y actual. Devuelve solo el JSON.`;
     if (Array.isArray(result.productos_detectados)) c.productosDetectados = result.productos_detectados;
     if (Array.isArray(result.servicios)) c.servicios = result.servicios;
     if (result.novedades) c.novedades = result.novedades;
-    if (result.potencial) c.potencial = Object.assign({ granFormato: '', rotulacion: '', impresion: '', sellosEspeciales: '' }, result.potencial);
+    if (result.potencial) c.potencial = Object.assign({ laser: '', rotulacion: '', merchandising: '', imprenta: '', textil: '' }, result.potencial);
     if (Array.isArray(result.lineas_gm_adecuadas)) c.lineasGM = result.lineas_gm_adecuadas;
     if (result.prioridad) c.prioridad = result.prioridad;
     c.potencialGlobal = result.prioridad || c.potencialGlobal;
