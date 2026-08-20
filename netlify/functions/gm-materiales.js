@@ -24,17 +24,40 @@ exports.handler = async (event) => {
   }
 
   const coleccion = (event.queryStringParameters && event.queryStringParameters.coleccion) || body.coleccion || 'materiales';
-  if (coleccion !== 'materiales' && coleccion !== 'productos' && coleccion !== 'maquinas') {
+  const COLECCIONES_LISTA = ['materiales', 'productos', 'maquinas', 'vehiculos'];
+  if (!COLECCIONES_LISTA.includes(coleccion) && coleccion !== 'notas') {
     return jsonResponse(400, { error: 'Colección no válida' });
   }
-  const prefix = coleccion === 'materiales' ? 'm' : coleccion === 'productos' ? 'p' : 'q';
-  const itemKey = coleccion === 'materiales' ? 'material' : coleccion === 'productos' ? 'producto' : 'maquina';
 
   const store = getStore({
     name: 'gm-materiales-data',
     siteID: process.env.SITE_ID_MANUAL,
     token: process.env.BLOBS_ACCESS_TOKEN
   });
+
+  // "notas" es un texto libre único (la pestaña "Cómo imprimimos"), no una lista de fichas
+  if (coleccion === 'notas') {
+    try {
+      if (event.httpMethod === 'GET') {
+        const texto = (await store.get('notas-comoimprimimos')) || '';
+        return jsonResponse(200, { texto });
+      }
+      if (event.httpMethod === 'PUT' || event.httpMethod === 'POST') {
+        const texto = body.texto || '';
+        await store.set('notas-comoimprimimos', texto);
+        return jsonResponse(200, { texto });
+      }
+      return jsonResponse(405, { error: 'Método no soportado' });
+    } catch (err) {
+      return jsonResponse(500, { error: err.message || 'Error interno' });
+    }
+  }
+
+  const prefixes = { materiales: 'm', productos: 'p', maquinas: 'q', vehiculos: 'v' };
+  const itemKeys = { materiales: 'material', productos: 'producto', maquinas: 'maquina', vehiculos: 'vehiculo' };
+  const prefix = prefixes[coleccion];
+  const itemKey = itemKeys[coleccion];
+
   let items = (await store.get(coleccion, { type: 'json' })) || [];
 
   try {
@@ -45,7 +68,7 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'POST') {
       const defaults = coleccion === 'materiales'
         ? { nombre: '', categoria: '', especificaciones: '', notas: '' }
-        : coleccion === 'productos'
+        : coleccion === 'productos' || coleccion === 'vehiculos'
           ? { nombre: '', categoria: '', variantes: '', especificaciones: '', notas: '' }
           : { nombre: '', categoria: '', materialesCompatibles: '', tamanos: '', colores: '', varios: '' };
       const it = Object.assign({}, defaults, body[itemKey] || {});
