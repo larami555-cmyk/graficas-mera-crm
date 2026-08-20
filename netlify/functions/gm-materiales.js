@@ -24,8 +24,8 @@ exports.handler = async (event) => {
   }
 
   const coleccion = (event.queryStringParameters && event.queryStringParameters.coleccion) || body.coleccion || 'materiales';
-  const COLECCIONES_LISTA = ['materiales', 'productos', 'maquinas', 'vehiculos'];
-  const COLECCIONES_NOTAS = ['notas', 'notasgenerales'];
+  const COLECCIONES_LISTA = ['materiales', 'productos', 'maquinas'];
+  const COLECCIONES_NOTAS = ['notas', 'notasgenerales', 'vehiculos'];
   if (!COLECCIONES_LISTA.includes(coleccion) && !COLECCIONES_NOTAS.includes(coleccion)) {
     return jsonResponse(400, { error: 'Colección no válida' });
   }
@@ -37,7 +37,7 @@ exports.handler = async (event) => {
   });
 
   // texto libre (cuadernos de notas), no son listas de fichas
-  const CUADERNOS = { 'notas': 'notas-comoimprimimos', 'notasgenerales': 'notas-generales' };
+  const CUADERNOS = { 'notas': 'notas-comoimprimimos', 'notasgenerales': 'notas-generales', 'vehiculos': 'notas-vehiculos' };
   if (CUADERNOS[coleccion]) {
     const storageKey = CUADERNOS[coleccion];
     try {

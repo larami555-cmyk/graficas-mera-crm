@@ -132,6 +132,7 @@
   </div>
 
   <div id="tabs" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="tabBtn" id="tabBuscar" onclick="switchTab('buscar')">🔎 Buscar</button>
     <button class="tabBtn active" id="tabMateriales" onclick="switchTab('materiales')">Materiales</button>
     <button class="tabBtn" id="tabProductos" onclick="switchTab('productos')">Productos</button>
     <button class="tabBtn" id="tabMaquinas" onclick="switchTab('maquinas')">Máquinas</button>
@@ -149,6 +150,7 @@
       <option value="Merchandising">Merchandising</option>
       <option value="Imprenta">Imprenta</option>
       <option value="Textil">Textil</option>
+      <option value="Papel">Papel</option>
       <option value="General">General</option>
     </select>
     <button id="addBtn">+ Añadir material</button>
@@ -163,6 +165,11 @@
       <span id="notesSavedLabel" style="font-size:12px;color:var(--paper-dim);"></span>
       <button class="action primary" onclick="saveNotas()">Guardar notas</button>
     </div>
+  </div>
+
+  <div id="searchAllPanel" style="display:none;">
+    <input id="searchAllInput" placeholder="Buscar por palabra en materiales, productos y máquinas..." style="width:100%;background:var(--steel-850);border:1px solid var(--line);color:var(--paper);padding:12px 14px;border-radius:5px;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:16px;">
+    <div id="searchAllResults"></div>
   </div>
 </div>
 
@@ -179,6 +186,7 @@
         <option value="Merchandising">Merchandising</option>
         <option value="Imprenta">Imprenta</option>
         <option value="Textil">Textil</option>
+        <option value="Papel">Papel</option>
         <option value="General">General</option>
       </select>
     </div>
@@ -303,6 +311,7 @@ let notasCargadasPor = {};
 
 function switchTab(tab){
   currentTab = tab;
+  document.getElementById('tabBuscar').classList.toggle('active', tab==='buscar');
   document.getElementById('tabMateriales').classList.toggle('active', tab==='materiales');
   document.getElementById('tabProductos').classList.toggle('active', tab==='productos');
   document.getElementById('tabMaquinas').classList.toggle('active', tab==='maquinas');
@@ -310,7 +319,18 @@ function switchTab(tab){
   document.getElementById('tabNotas').classList.toggle('active', tab==='notas');
   document.getElementById('tabNotasGenerales').classList.toggle('active', tab==='notasgenerales');
 
-  const esNotas = tab === 'notas' || tab === 'notasgenerales';
+  if(tab === 'buscar'){
+    document.getElementById('controls').style.display = 'none';
+    document.getElementById('grid').style.display = 'none';
+    document.getElementById('notesPanel').style.display = 'none';
+    document.getElementById('searchAllPanel').style.display = 'block';
+    renderSearchAll();
+    setTimeout(()=>document.getElementById('searchAllInput').focus(), 50);
+    return;
+  }
+  document.getElementById('searchAllPanel').style.display = 'none';
+
+  const esNotas = tab === 'notas' || tab === 'notasgenerales' || tab === 'vehiculos';
   document.getElementById('controls').style.display = esNotas ? 'none' : 'flex';
   document.getElementById('grid').style.display = esNotas ? 'none' : 'grid';
   document.getElementById('notesPanel').style.display = esNotas ? 'block' : 'none';
@@ -318,10 +338,11 @@ function switchTab(tab){
   if(esNotas){
     const intros = {
       notas: 'Espacio libre para tus propios comentarios: procesos, trucos, cosas a recordar de cómo imprimís cada cosa.',
-      notasgenerales: 'Espacio libre para cualquier otra nota que quieras guardar.'
+      notasgenerales: 'Espacio libre para cualquier otra nota que quieras guardar.',
+      vehiculos: 'Notas sobre rotulación de vehículos: tipos, materiales, medidas, lo que te haga falta recordar.'
     };
     document.getElementById('notesIntro').textContent = intros[tab];
-    document.getElementById('notesTextarea').placeholder = tab === 'notas' ? 'Escribe aquí tus notas sobre cómo imprimimos...' : 'Escribe aquí lo que quieras...';
+    document.getElementById('notesTextarea').placeholder = tab === 'notas' ? 'Escribe aquí tus notas sobre cómo imprimimos...' : tab === 'vehiculos' ? 'Escribe aquí tus notas sobre rotulación de vehículos...' : 'Escribe aquí lo que quieras...';
     if(!notasCargadasPor[tab]) loadNotas(tab);
     else document.getElementById('notesTextarea').value = notasCargadasPor[tab];
     return;
@@ -386,7 +407,6 @@ async function attemptLoad(fromLoginForm){
     materiales = await fetchColeccion('materiales');
     productos = await fetchColeccion('productos');
     maquinas = await fetchColeccion('maquinas');
-    vehiculos = await fetchColeccion('vehiculos');
     localStorage.setItem('gm_crm_pass', crmPassword);
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').classList.add('ready');
@@ -483,13 +503,26 @@ function getItemKey(){
 }
 
 // ---------- GRID ----------
+function normalizeText(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
 function renderGrid(){
   const grid = document.getElementById('grid');
   const list = getCurrentList();
-  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const q = normalizeText(document.getElementById('searchInput').value);
   const cat = document.getElementById('categoryFilter').value;
   const filtered = list.filter(m=>{
-    const matchQ = !q || m.nombre.toLowerCase().includes(q) || (m.especificaciones||'').toLowerCase().includes(q) || (m.variantes||'').toLowerCase().includes(q) || (m.materialesCompatibles||'').toLowerCase().includes(q) || (m.tamanos||'').toLowerCase().includes(q) || (m.colores||'').toLowerCase().includes(q) || (m.varios||'').toLowerCase().includes(q);
+    const matchQ = !q
+      || normalizeText(m.nombre).includes(q)
+      || normalizeText(m.especificaciones).includes(q)
+      || normalizeText(m.variantes).includes(q)
+      || normalizeText(m.materialesCompatibles).includes(q)
+      || normalizeText(m.tamanos).includes(q)
+      || normalizeText(m.colores).includes(q)
+      || normalizeText(m.varios).includes(q)
+      || normalizeText((m.materialesUsados||[]).join(' ')).includes(q)
+      || normalizeText((m.maquinasUsadas||[]).join(' ')).includes(q);
     const matchCat = !cat || m.categoria === cat;
     return matchQ && matchCat;
   });
@@ -671,13 +704,13 @@ async function deleteMaterial(){
 async function exportarCopia(){
   showToast('Preparando copia de seguridad...');
   try{
-    const [mats, prods, maqs, vehs, notasImp, notasGen] = await Promise.all([
+    const [mats, prods, maqs, notasImp, notasGen, notasVeh] = await Promise.all([
       fetchColeccion('materiales'),
       fetchColeccion('productos'),
       fetchColeccion('maquinas'),
-      fetchColeccion('vehiculos'),
       fetch(`${FN_MATERIALES}?coleccion=notas`, { headers: { 'x-crm-password': crmPassword } }).then(r=>r.json()),
-      fetch(`${FN_MATERIALES}?coleccion=notasgenerales`, { headers: { 'x-crm-password': crmPassword } }).then(r=>r.json())
+      fetch(`${FN_MATERIALES}?coleccion=notasgenerales`, { headers: { 'x-crm-password': crmPassword } }).then(r=>r.json()),
+      fetch(`${FN_MATERIALES}?coleccion=vehiculos`, { headers: { 'x-crm-password': crmPassword } }).then(r=>r.json())
     ]);
     const backup = {
       exportado: new Date().toISOString(),
@@ -685,9 +718,9 @@ async function exportarCopia(){
       materiales: mats,
       productos: prods,
       maquinas: maqs,
-      vehiculos: vehs,
       comoImprimimos: notasImp.texto || '',
-      notas: notasGen.texto || ''
+      notas: notasGen.texto || '',
+      rotulacionVehiculos: notasVeh.texto || ''
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -702,7 +735,50 @@ async function exportarCopia(){
   }catch(err){ showToast('No se pudo exportar: ' + err.message); }
 }
 
-// ---------- INIT ----------
+function renderSearchAll(){
+  const wrap = document.getElementById('searchAllResults');
+  const q = normalizeText(document.getElementById('searchAllInput').value);
+  if(!q){
+    wrap.innerHTML = `<div id="emptyList">Escribe una palabra para buscar en materiales, productos y máquinas a la vez.</div>`;
+    return;
+  }
+  const fuentes = [
+    { tipo: 'materiales', label: 'Material', lista: materiales },
+    { tipo: 'productos', label: 'Producto', lista: productos },
+    { tipo: 'maquinas', label: 'Máquina', lista: maquinas }
+  ];
+  let resultados = [];
+  fuentes.forEach(f=>{
+    f.lista.forEach(item=>{
+      const texto = normalizeText([
+        item.nombre, item.categoria, item.especificaciones, item.variantes,
+        item.materialesCompatibles, item.tamanos, item.colores, item.varios,
+        (item.materialesUsados||[]).join(' '), (item.maquinasUsadas||[]).join(' ')
+      ].join(' '));
+      if(texto.includes(q)) resultados.push({ tipo: f.tipo, label: f.label, item });
+    });
+  });
+  if(resultados.length === 0){
+    wrap.innerHTML = `<div id="emptyList">Sin resultados para "${escapeHtml(document.getElementById('searchAllInput').value)}".</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div id="grid" style="display:grid;">${resultados.map(r=>`
+    <div class="card" style="cursor:pointer;" onclick="irAResultado('${r.tipo}','${r.item.id}')">
+      <div class="cardTop">
+        <div>
+          <h3>${escapeHtml(r.item.nombre)}</h3>
+          <span class="cat">${r.label}</span>
+        </div>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+document.getElementById('searchAllInput')?.addEventListener('input', renderSearchAll);
+
+function irAResultado(tipo, id){
+  switchTab(tipo);
+  setTimeout(()=>openEdit(id), 60);
+}
 document.getElementById('addBtn').addEventListener('click', openModal);
 document.getElementById('searchInput').addEventListener('input', renderGrid);
 document.getElementById('categoryFilter').addEventListener('change', renderGrid);
