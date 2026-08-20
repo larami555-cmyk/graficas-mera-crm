@@ -1,0 +1,9 @@
+{
+  "name": "graficas-mera-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CRM de inteligencia comercial para Gráficas Mera (imprenta industrial, artes gráficas, A Coruña)",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Gráficas Mera — Inteligencia Comercial</title>
+<link rel="icon" href="./images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="./images/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./images/icon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./images/icon-180.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#14171a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GM CRM">
+<meta name="msapplication-TileColor" content="#14171a">
+<meta name="msapplication-TileImage" content="./images/icon-152.png">
+<meta name="msapplication-config" content="./browserconfig.xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --steel-950:#14171a; --steel-900:#1b1f23; --steel-850:#21262b; --steel-800:#272d33;
+    --steel-700:#333b42; --steel-600:#454f57; --line:#3a4149;
+    --paper:#eef1f3; --paper-dim:#a3aeb6; --ink:#d6483f; --ink-dim:#9c342c;
+    --cyan:#4fb0c6; --cyan-dim:#204048; --amber:#e0a53e; --amber-dim:#4a3a1c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{background:var(--steel-950);color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  ::selection{background:var(--ink-dim);color:#fff;}
+
+  #app{display:none;height:100vh;overflow:hidden;}
+  #app.ready{display:flex;}
+
+  #sidebar{width:340px;min-width:340px;background:var(--steel-900);border-right:1px solid var(--line);display:flex;flex-direction:column;height:100%;}
+  #brand{padding:22px 20px 16px;border-bottom:1px solid var(--line);}
+  #brand .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:6px;}
+  #brand h1{font-size:20px;font-weight:700;margin:0;line-height:1.15;color:var(--paper);}
+  #brand .sub{font-size:12px;color:var(--paper-dim);margin-top:4px;}
+
+  #newClientBtn{margin:16px 20px 12px;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:11px 14px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s ease;}
+  #newClientBtn:hover{background:#e2564d;}
+  #newClientBtn .plus{font-size:16px;line-height:1;}
+
+  #searchWrap{padding:0 20px 10px;}
+  #searchInput{width:100%;background:var(--steel-850);border:1px solid var(--line);color:var(--paper);padding:9px 11px;border-radius:3px;font-size:13px;font-family:'Inter',sans-serif;}
+  #searchInput:focus{outline:none;border-color:var(--ink-dim);}
+  #searchInput::placeholder{color:var(--paper-dim);}
+
+  #clientList{flex:1;overflow-y:auto;padding:4px 12px 20px;}
+  .clientCard{padding:13px 12px;margin-bottom:6px;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:background .12s ease,border-color .12s ease;}
+  .clientCard:hover{background:var(--steel-850);}
+  .clientCard.active{background:var(--steel-800);border-color:var(--ink-dim);}
+  .clientCard .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .clientCard .nombre{font-weight:600;font-size:14px;color:var(--paper);}
+  .clientCard .localidad{font-size:11.5px;color:var(--paper-dim);margin-top:2px;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+  .badge.alta{background:var(--amber-dim);color:#f0c67c;}
+  .badge.media{background:var(--cyan-dim);color:#a7d8e3;}
+  .badge.baja{background:var(--steel-700);color:var(--paper-dim);}
+  .badge.sin{background:var(--steel-800);color:var(--paper-dim);border:1px dashed var(--line);}
+  #emptyList{padding:30px 10px;text-align:center;color:var(--paper-dim);font-size:12.5px;line-height:1.5;}
+
+  #main{flex:1;overflow-y:auto;height:100%;position:relative;}
+  #emptyMain{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--paper-dim);text-align:center;padding:40px;}
+  #emptyMain .glyph{font-size:34px;color:var(--ink-dim);margin-bottom:14px;font-family:'Space Grotesk',sans-serif;}
+  #emptyMain h2{color:var(--paper);font-size:19px;margin:0 0 8px;font-weight:700;}
+  #emptyMain p{max-width:360px;font-size:13px;line-height:1.6;margin:0;}
+
+  #detail{max-width:880px;margin:0 auto;padding:36px 40px 80px;}
+  .backMobile{display:none;}
+  #detailHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:26px;padding-bottom:22px;border-bottom:1px solid var(--line);}
+  #detailHeader h2{font-size:27px;font-weight:700;margin:0 0 4px;color:var(--paper);}
+  #detailHeader .loc{font-size:13.5px;color:var(--paper-dim);}
+  #detailHeader .loc .dot{margin:0 8px;color:var(--line);}
+
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap;}
+  button.action{font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;border-radius:3px;padding:9px 13px;cursor:pointer;border:1px solid var(--line);
+    background:var(--steel-850);color:var(--paper);white-space:nowrap;transition:border-color .15s ease, background .15s ease;}
+  button.action:hover{border-color:var(--ink-dim);}
+  button.action.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  button.action.primary:hover{background:#e2564d;}
+  button.action.danger{color:#e79a86;}
+  button.action.danger:hover{border-color:var(--ink);}
+  button.action:disabled{opacity:.5;cursor:default;}
+
+  .sectionLabel{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin:30px 0 12px;display:flex;align-items:center;gap:10px;}
+  .sectionLabel::after{content:"";flex:1;height:1px;background:var(--line);}
+  .sectionLabel:first-child{margin-top:0;}
+
+  .fichaGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}
+  .fichaGrid.wide{grid-template-columns:1fr;}
+  .field{background:var(--steel-900);border:1px solid var(--line);border-radius:4px;padding:12px 14px;}
+  .field label{display:block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:5px;}
+  .field .val{font-size:14px;color:var(--paper);line-height:1.5;}
+  .field .val.empty{color:var(--paper-dim);font-style:italic;font-size:12.5px;}
+  .field input, .field textarea, .field select{width:100%;background:transparent;border:none;color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;padding:0;resize:vertical;}
+  .field input:focus, .field textarea:focus, .field select:focus{outline:none;}
+  .field textarea{min-height:60px;line-height:1.5;}
+  .field.editing{border-color:var(--ink-dim);}
+
+  .chipRow{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{background:var(--steel-800);border:1px solid var(--line);color:var(--paper);font-size:12px;padding:4px 10px;border-radius:20px;}
+  .chip.gm{background:var(--cyan-dim);border-color:var(--cyan);color:#c3e6ee;}
+
+  #potencialBars{display:flex;flex-direction:column;gap:10px;}
+  .potRow{display:flex;align-items:center;gap:12px;}
+  .potRow .lbl{width:150px;font-size:12.5px;color:var(--paper-dim);flex-shrink:0;}
+  .potRow .track{flex:1;height:6px;background:var(--steel-800);border-radius:4px;overflow:hidden;}
+  .potRow .fill{height:100%;border-radius:4px;background:var(--ink);}
+  .potRow .lvl{width:56px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--paper-dim);text-transform:uppercase;}
+
+  #historial{display:flex;flex-direction:column;gap:0;}
+  .histItem{padding:14px 0;border-bottom:1px solid var(--line);}
+  .histItem:last-child{border-bottom:none;}
+  .histItem .histTop{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;}
+  .histItem .histDate{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink);}
+  .histItem .histResumen{font-size:13px;line-height:1.6;color:var(--paper);}
+  .histItem .fuentes{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
+  .histItem .fuentes a{font-size:11px;color:var(--paper-dim);text-decoration:none;border:1px solid var(--line);padding:3px 8px;border-radius:20px;}
+  .histItem .fuentes a:hover{border-color:var(--ink-dim);color:var(--ink);}
+
+  #investigarStatus{display:none;align-items:center;gap:10px;padding:12px 14px;background:var(--steel-900);border:1px solid var(--ink-dim);border-radius:4px;font-size:12.5px;color:var(--paper-dim);margin-bottom:20px;}
+  #investigarStatus.show{display:flex;}
+  .spinner{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .overlay{position:fixed;inset:0;background:rgba(8,9,10,.65);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--steel-900);border:1px solid var(--line);border-radius:6px;width:100%;max-width:480px;padding:26px 26px 22px;max-height:88vh;overflow-y:auto;}
+  .modal h3{margin:0 0 4px;font-size:19px;color:var(--paper);}
+  .modal .modalSub{font-size:12.5px;color:var(--paper-dim);margin-bottom:20px;}
+  .modal .fld{margin-bottom:13px;}
+  .modal .fld label{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:5px;}
+  .modal .fld input{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:9px 11px;color:var(--paper);font-family:'Inter',sans-serif;font-size:13.5px;}
+  .modal .fld input:focus{outline:none;border-color:var(--ink-dim);}
+  .modalBtns{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--steel-800);border:1px solid var(--ink-dim);color:var(--paper);
+    padding:11px 18px;border-radius:4px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;z-index:100;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  #loginScreen{height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  #loginBox{width:100%;max-width:340px;text-align:center;}
+  #loginBox .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:10px;}
+  #loginBox h1{font-size:23px;margin:0 0 26px;}
+  #loginBox input{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:12px 14px;color:var(--paper);font-family:'Inter',sans-serif;font-size:14px;text-align:center;margin-bottom:12px;}
+  #loginBox input:focus{outline:none;border-color:var(--ink-dim);}
+  #loginBox button{width:100%;background:var(--ink);color:#fff;border:none;border-radius:3px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;}
+  #loginBox button:hover{background:#e2564d;}
+  #loginError{color:#e79a86;font-size:12.5px;margin-top:12px;min-height:16px;}
+
+  @media (max-width: 820px){
+    #sidebar{position:fixed;inset:0;width:100%;min-width:0;z-index:20;transform:translateX(0);}
+    #sidebar.hideMobile{display:none;}
+    #main{width:100%;}
+    #main.hideMobile{display:none;}
+    .backMobile{display:inline-flex;}
+    #detail{padding:20px 18px 60px;}
+    .fichaGrid{grid-template-columns:1fr;}
+    #detailHeader{flex-direction:column;}
+    .potRow .lbl{width:120px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div id="loginBox">
+    <div class="eyebrow">Gráficas Mera</div>
+    <h1 class="display">Inteligencia Comercial</h1>
+    <input id="loginInput" type="password" placeholder="Contraseña de acceso" autocomplete="current-password">
+    <button onclick="tryLogin()">Entrar</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <aside id="sidebar">
+    <div id="brand">
+      <div class="eyebrow">Gráficas Mera · A Coruña</div>
+      <h1>Inteligencia Comercial</h1>
+      <div class="sub">Fichas de cliente con investigación automática</div>
+    </div>
+    <button id="newClientBtn"><span class="plus">+</span> Nuevo cliente</button>
+    <div id="searchWrap"><input id="searchInput" placeholder="Buscar cliente o localidad..."></div>
+    <div id="clientList"></div>
+  </aside>
+
+  <main id="main">
+    <div id="emptyMain">
+      <div class="glyph">＋</div>
+      <h2>Ninguna ficha abierta</h2>
+      <p>Crea un nuevo cliente o selecciona uno de la lista para ver su ficha de inteligencia comercial.</p>
+    </div>
+    <div id="detail" style="display:none"></div>
+  </main>
+</div>
+
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Nuevo cliente</h3>
+    <div class="modalSub">Se crea la ficha. Después pulsa "Investigar cliente" para que el agente rellene el resto.</div>
+    <div class="fld"><label>Nombre del cliente *</label><input id="f_nombre" placeholder="Ej. Restaurante O Muíño"></div>
+    <div class="fld"><label>Localidad *</label><input id="f_localidad" placeholder="Ej. A Coruña"></div>
+    <div class="fld"><label>Web (opcional)</label><input id="f_web" placeholder="https://..."></div>
+    <div class="fld"><label>Teléfono (opcional)</label><input id="f_telefono" placeholder=""></div>
+    <div class="modalBtns">
+      <button class="action" onclick="closeModal()">Cancelar</button>
+      <button class="action primary" onclick="submitNewClient()">Crear ficha</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const GM_LINEAS = ["Gran formato","Rotulación y señalética","Impresión offset y digital","Sellos y productos especiales"];
+const FN_CLIENTES = '/.netlify/functions/crm-clientes';
+const FN_INVESTIGAR = '/.netlify/functions/crm-investigar';
+
+let clients = [];
+let activeId = null;
+let editingField = null;
+let crmPassword = null;
+
+// ---------- LOGIN ----------
+function tryLogin(){
+  const val = document.getElementById('loginInput').value;
+  if(!val){ return; }
+  crmPassword = val;
+  attemptLoad(true);
+}
+document.getElementById('loginInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+async function attemptLoad(fromLoginForm){
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = fromLoginForm ? 'Comprobando...' : '';
+  try{
+    const r = await fetch(FN_CLIENTES, { headers: { 'x-crm-password': crmPassword } });
+    if(r.status === 401){
+      errEl.textContent = 'Contraseña incorrecta.';
+      localStorage.removeItem('gm_crm_pass');
+      return;
+    }
+    if(!r.ok) throw new Error('Error del servidor');
+    const data = await r.json();
+    clients = data.clientes || [];
+    localStorage.setItem('gm_crm_pass', crmPassword);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').classList.add('ready');
+    renderList();
+  }catch(err){
+    errEl.textContent = 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.';
+  }
+}
+
+(function initLogin(){
+  const saved = localStorage.getItem('gm_crm_pass');
+  if(saved){ crmPassword = saved; attemptLoad(false); }
+})();
+
+function logout(){
+  localStorage.removeItem('gm_crm_pass');
+  location.reload();
+}
+
+// ---------- HELPERS ----------
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function escapeHtml(s){
+  return (s||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+async function apiCall(url, method, payload){
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ password: crmPassword }, payload || {}))
+  });
+  if(r.status === 401){ showToast('Sesión no autorizada. Vuelve a entrar.'); logout(); throw new Error('401'); }
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
+
+// ---------- MODAL NUEVO CLIENTE ----------
+function openModal(){
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('f_nombre').value='';
+  document.getElementById('f_localidad').value='';
+  document.getElementById('f_web').value='';
+  document.getElementById('f_telefono').value='';
+  setTimeout(()=>document.getElementById('f_nombre').focus(),50);
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+
+async function submitNewClient(){
+  const nombre = document.getElementById('f_nombre').value.trim();
+  const localidad = document.getElementById('f_localidad').value.trim();
+  if(!nombre || !localidad){ showToast('Nombre y localidad son obligatorios.'); return; }
+  try{
+    const data = await apiCall(FN_CLIENTES, 'POST', {
+      cliente: { nombre, localidad, telefono: document.getElementById('f_telefono').value.trim(), web: document.getElementById('f_web').value.trim() }
+    });
+    clients.unshift(data.cliente);
+    closeModal();
+    renderList();
+    openClient(data.cliente.id);
+    showToast('Ficha creada.');
+  }catch(err){ showToast('No se pudo crear la ficha: ' + err.message); }
+}
+
+// ---------- LISTA ----------
+function renderList(){
+  const wrap = document.getElementById('clientList');
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const filtered = clients.filter(c => !q || c.nombre.toLowerCase().includes(q) || c.localidad.toLowerCase().includes(q));
+  if(filtered.length===0){
+    wrap.innerHTML = `<div id="emptyList">${clients.length===0 ? 'Todavía no hay clientes. Crea el primero con "+ Nuevo cliente".' : 'Sin resultados para esa búsqueda.'}</div>`;
+    return;
+  }
+  wrap.innerHTML = filtered.map(c=>{
+    const prio = (c.prioridad||'').toLowerCase();
+    const badgeClass = prio==='alta'?'alta':prio==='media'?'media':prio==='baja'?'baja':'sin';
+    const badgeText = c.prioridad || 'Sin investigar';
+    return `<div class="clientCard ${c.id===activeId?'active':''}" onclick="openClient('${c.id}')">
+      <div class="row1">
+        <div class="nombre">${escapeHtml(c.nombre)}</div>
+        <span class="badge ${badgeClass}">${escapeHtml(badgeText)}</span>
+      </div>
+      <div class="localidad">${escapeHtml(c.localidad)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------- DETALLE ----------
+function openClient(id){
+  activeId = id;
+  document.getElementById('emptyMain').style.display='none';
+  document.getElementById('detail').style.display='block';
+  document.getElementById('sidebar').classList.add('hideMobile');
+  renderList();
+  renderDetail();
+}
+function backToList(){
+  document.getElementById('sidebar').classList.remove('hideMobile');
+}
+function getClient(id){ return clients.find(c=>c.id===id); }
+
+function fieldHtml(clientId, key, label, value, multiline){
+  const isEditing = editingField && editingField.clientId===clientId && editingField.key===key;
+  const displayVal = value || '';
+  if(isEditing){
+    const tag = multiline ? `<textarea id="editInput" oninput="autoGrow(this)">${escapeHtml(displayVal)}</textarea>` : `<input id="editInput" value="${escapeHtml(displayVal)}">`;
+    return `<div class="field editing"><label>${label}</label>${tag}</div>`;
+  }
+  return `<div class="field" onclick="startEdit('${clientId}','${key}')">
+    <label>${label}</label>
+    <div class="val ${displayVal?'':'empty'}">${displayVal ? escapeHtml(displayVal) : 'Sin datos — toca para añadir'}</div>
+  </div>`;
+}
+function autoGrow(el){ el.style.height='auto'; el.style.height=(el.scrollHeight)+'px'; }
+
+function startEdit(clientId, key){
+  if(editingField) commitEdit();
+  editingField = {clientId, key};
+  renderDetail();
+  setTimeout(()=>{
+    const el = document.getElementById('editInput');
+    if(el){
+      el.focus();
+      if(el.tagName==='TEXTAREA'){ autoGrow(el); el.selectionStart=el.value.length; }
+      el.addEventListener('blur', commitEdit);
+      el.addEventListener('keydown', e=>{
+        if(e.key==='Enter' && e.target.tagName==='INPUT'){ e.preventDefault(); commitEdit(); }
+        if(e.key==='Escape'){ editingField=null; renderDetail(); }
+      });
+    }
+  }, 30);
+}
+
+async function commitEdit(){
+  if(!editingField) return;
+  const {clientId, key} = editingField;
+  const el = document.getElementById('editInput');
+  const val = el ? el.value.trim() : '';
+  editingField = null;
+  const c = getClient(clientId);
+  if(c) c[key] = val;
+  renderDetail();
+  renderList();
+  try{
+    const data = await apiCall(FN_CLIENTES, 'PUT', { id: clientId, patch: { [key]: val } });
+    const idx = clients.findIndex(x=>x.id===clientId);
+    if(idx>-1) clients[idx] = data.cliente;
+  }catch(err){ showToast('No se pudo guardar: ' + err.message); }
+}
+
+function prioritySelectHtml(c){
+  const opts = ['', 'Alta','Media','Baja'];
+  return `<select id="prioritySelect" onchange="setPriority('${c.id}', this.value)">
+    ${opts.map(o=>`<option value="${o}" ${c.prioridad===o?'selected':''}>${o||'Sin definir'}</option>`).join('')}
+  </select>`;
+}
+async function setPriority(id, val){
+  const c = getClient(id);
+  if(c) c.prioridad = val;
+  renderList(); renderDetail();
+  try{
+    const data = await apiCall(FN_CLIENTES, 'PUT', { id, patch: { prioridad: val } });
+    const idx = clients.findIndex(x=>x.id===id);
+    if(idx>-1) clients[idx] = data.cliente;
+  }catch(err){ showToast('No se pudo guardar: ' + err.message); }
+}
+
+function renderDetail(){
+  const c = getClient(activeId);
+  if(!c){ document.getElementById('detail').style.display='none'; document.getElementById('emptyMain').style.display='flex'; return; }
+
+  const potLabels = {granFormato:'Gran formato', rotulacion:'Rotulación y señal.', impresion:'Impresión offset/digital', sellosEspeciales:'Sellos y especiales'};
+  const potLevel = v => ({Alto:100,Medio:60,Bajo:30,Nulo:6}[v] || 4);
+  const potColor = v => v==='Alto' ? 'var(--cyan)' : v==='Medio' ? 'var(--ink)' : v==='Bajo' ? 'var(--paper-dim)' : 'var(--line)';
+
+  const potBars = Object.keys(potLabels).map(k=>{
+    const v = c.potencial && c.potencial[k] ? c.potencial[k] : '';
+    return `<div class="potRow">
+      <div class="lbl">${potLabels[k]}</div>
+      <div class="track"><div class="fill" style="width:${potLevel(v)}%;background:${potColor(v)}"></div></div>
+      <div class="lvl">${v||'—'}</div>
+    </div>`;
+  }).join('');
+
+  const gmChips = GM_LINEAS.map(b=>{
+    const on = (c.lineasGM||[]).includes(b);
+    return `<span class="chip ${on?'gm':''}">${b}</span>`;
+  }).join('');
+
+  const proveedorChips = (c.proveedorActual||[]).length
+    ? c.proveedorActual.map(m=>`<span class="chip">${escapeHtml(m)}</span>`).join('')
+    : `<span class="val empty">Sin proveedor actual detectado.</span>`;
+  const productosChips = (c.productosDetectados||[]).length
+    ? c.productosDetectados.map(m=>`<span class="chip">${escapeHtml(m)}</span>`).join('')
+    : `<span class="val empty">Sin productos detectados todavía.</span>`;
+
+  const histHtml = (c.historial||[]).length ? c.historial.slice().reverse().map(h=>{
+    const fuentes = (h.fuentes||[]).map(f=>{
+      let host = f.url; try{ host = new URL(f.url).hostname; }catch(e){}
+      return `<a href="${f.url}" target="_blank" rel="noopener">${escapeHtml(f.titulo||host)}</a>`;
+    }).join('');
+    return `<div class="histItem">
+      <div class="histTop"><div class="histDate">${new Date(h.fecha).toLocaleString('es-ES',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div>
+      <div class="histResumen">${escapeHtml(h.resumen||'')}</div>
+      ${fuentes ? `<div class="fuentes">${fuentes}</div>` : ''}
+    </div>`;
+  }).join('') : `<div class="val empty" style="padding:6px 0;">Todavía no se ha investigado este cliente.</div>`;
+
+  document.getElementById('detail').innerHTML = `
+    <button class="action backMobile" onclick="backToList()" style="margin-bottom:16px;">← Clientes</button>
+    <div id="detailHeader">
+      <div>
+        <h2>${escapeHtml(c.nombre)}</h2>
+        <div class="loc">${escapeHtml(c.localidad)}${c.web ? `<span class="dot">·</span><a href="${c.web.startsWith('http')?c.web:'https://'+c.web}" target="_blank" style="color:var(--paper-dim)">${escapeHtml(c.web)}</a>`:''}</div>
+      </div>
+      <div class="btnRow">
+        <button class="action primary" id="investigarBtn" onclick="investigarCliente('${c.id}')">🔎 Investigar cliente</button>
+        <button class="action danger" onclick="deleteClient('${c.id}')">Eliminar</button>
+      </div>
+    </div>
+
+    <div id="investigarStatus"><div class="spinner"></div><span>Investigando cliente en internet... puede tardar 20-30 segundos.</span></div>
+
+    <div class="sectionLabel">Identificación</div>
+    <div class="fichaGrid">
+      ${fieldHtml(c.id,'nombre','Nombre correcto', c.nombre)}
+      ${fieldHtml(c.id,'localidad','Localidad', c.localidad)}
+      ${fieldHtml(c.id,'direccion','Dirección', c.direccion)}
+      ${fieldHtml(c.id,'telefono','Teléfono', c.telefono)}
+      ${fieldHtml(c.id,'web','Web', c.web)}
+      ${fieldHtml(c.id,'redes','Redes públicas', c.redes)}
+    </div>
+
+    <div class="sectionLabel">A qué se dedica</div>
+    <div class="fichaGrid wide">
+      ${fieldHtml(c.id,'tipoNegocio','Tipo de negocio / actividad', c.tipoNegocio, true)}
+      <div class="field"><label>Proveedor de impresión actual detectado</label><div class="chipRow">${proveedorChips}</div></div>
+      <div class="field"><label>Productos / necesidades detectadas</label><div class="chipRow">${productosChips}</div></div>
+      ${fieldHtml(c.id,'servicios','Servicios propios del cliente', (c.servicios||[]).join(', '), true)}
+      ${fieldHtml(c.id,'novedades','Noticias / novedades', c.novedades, true)}
+    </div>
+
+    <div class="sectionLabel">Potencial por línea</div>
+    <div class="field" id="potencialBars">${potBars}</div>
+
+    <div class="sectionLabel">Encaje con líneas de Gráficas Mera</div>
+    <div class="field"><div class="chipRow">${gmChips}</div></div>
+
+    <div class="sectionLabel">Ficha de seguimiento</div>
+    <div class="fichaGrid">
+      <div class="field"><label>Prioridad</label>${prioritySelectHtml(c)}</div>
+      ${fieldHtml(c.id,'ultimaVisita','Última visita', c.ultimaVisita)}
+      ${fieldHtml(c.id,'proximoSeguimiento','Próximo seguimiento', c.proximoSeguimiento)}
+    </div>
+    <div class="fichaGrid wide" style="margin-top:14px;">
+      ${fieldHtml(c.id,'observaciones','Observaciones', c.observaciones, true)}
+    </div>
+
+    <div class="sectionLabel">Historial de investigación</div>
+    <div id="historial">${histHtml}</div>
+  `;
+}
+
+async function deleteClient(id){
+  if(!confirm('¿Eliminar esta ficha de cliente? No se puede deshacer.')) return;
+  try{
+    await apiCall(FN_CLIENTES, 'DELETE', { id });
+    clients = clients.filter(c=>c.id!==id);
+    activeId = null;
+    document.getElementById('detail').style.display='none';
+    document.getElementById('emptyMain').style.display='flex';
+    renderList();
+  }catch(err){ showToast('No se pudo eliminar: ' + err.message); }
+}
+
+// ---------- AGENTE INVESTIGADOR ----------
+async function investigarCliente(id){
+  const btn = document.getElementById('investigarBtn');
+  btn.disabled = true;
+  document.getElementById('investigarStatus').classList.add('show');
+  try{
+    const data = await apiCall(FN_INVESTIGAR, 'POST', { id });
+    const idx = clients.findIndex(x=>x.id===id);
+    if(idx>-1) clients[idx] = data.cliente;
+    renderList();
+    renderDetail();
+    showToast('Ficha actualizada con la investigación.');
+  }catch(err){
+    showToast('No se pudo completar la investigación: ' + err.message);
+  }finally{
+    document.getElementById('investigarStatus').classList.remove('show');
+    const b = document.getElementById('investigarBtn');
+    if(b) b.disabled = false;
+  }
+}
+
+// ---------- INIT ----------
+document.getElementById('newClientBtn').addEventListener('click', openModal);
+document.getElementById('searchInput').addEventListener('input', renderList);
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+</script>
+</body>
+</html>
