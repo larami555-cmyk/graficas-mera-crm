@@ -30,3 +30,6 @@ trabaja con PVC, cartón pluma, aluminio, metacrilato, madera, caucho y lonas, e
 - Los cambios de variables de entorno no se aplican hasta el siguiente deploy — hay que forzar "Trigger deploy"
   después de cada cambio.
 - `getStore()` necesita `{ name, siteID, token }` explícitos en producción si el contexto automático falla.
+
+## Variables de entorno configuradas (20 agosto 2026)
+Confirmado en Netlify: ANTHROPIC_API_KEY, CRM_PASSWORD, BLOBS_ACCESS_TOKEN, SITE_ID_MANUAL — las 4 correctamente guardadas.
