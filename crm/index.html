@@ -18,6 +18,7 @@
 <meta name="msapplication-config" content="./browserconfig.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
   :root{
     --steel-950:#d3d0d3; --steel-900:#dbd9db; --steel-850:#e6e4e6; --steel-800:#eeeced;
@@ -186,6 +187,25 @@
     a{color:#000 !important;text-decoration:underline !important;}
     .card, .field{break-inside:avoid;}
   }
+
+  body.pdf-export{background:#fff !important;color:#000 !important;}
+  body.pdf-export #sidebar, body.pdf-export #newClientBtn, body.pdf-export #searchWrap, body.pdf-export .backLink, body.pdf-export .backMobile, body.pdf-export #modalOverlay, body.pdf-export #toast{display:none !important;}
+  body.pdf-export #main{overflow:visible !important;}
+  body.pdf-export #detail{max-width:100% !important;padding:0 !important;margin:0 !important;}
+  body.pdf-export #detailHeader .btnRow, body.pdf-export #investigarStatus{display:none !important;}
+  body.pdf-export #detailHeader{border-bottom-color:#999 !important;}
+  body.pdf-export #detailHeader h2{color:#000 !important;}
+  body.pdf-export .sectionLabel{color:#000 !important;}
+  body.pdf-export .sectionLabel::after{background:#ccc !important;}
+  body.pdf-export .field, body.pdf-export #potencialBars, body.pdf-export .histItem{background:#fff !important;border:1px solid #ccc !important;}
+  body.pdf-export .field label{color:#555 !important;}
+  body.pdf-export .field .val, body.pdf-export .field .val.empty{color:#000 !important;}
+  body.pdf-export .chip{background:#eee !important;border-color:#ccc !important;color:#000 !important;}
+  body.pdf-export .chip.mcs, body.pdf-export .chip.gm{background:#e0f0e8 !important;border-color:#8ac1a4 !important;color:#000 !important;}
+  body.pdf-export .badge{background:#eee !important;color:#000 !important;}
+  body.pdf-export .potRow .track{background:#eee !important;}
+  body.pdf-export .potRow .fill{background:#999 !important;}
+  body.pdf-export a{color:#000 !important;text-decoration:underline !important;}
 </style>
 </head>
 <body>
@@ -513,6 +533,7 @@ function renderDetail(){
       <div class="btnRow">
         <button class="action primary" id="investigarBtn" onclick="investigarCliente('${c.id}')">🔎 Investigar cliente</button>
         <button class="action" onclick="window.print()">🖨 Imprimir ficha</button>
+        <button class="action" id="pdfBtn" onclick="descargarPDF('${c.id}')">⬇ Descargar PDF</button>
         <button class="action danger" onclick="deleteClient('${c.id}')">Eliminar</button>
       </div>
     </div>
@@ -614,6 +635,35 @@ function exportarClientes(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('Copia de clientes descargada.');
+}
+
+async function descargarPDF(clientId){
+  const c = getClient(clientId);
+  if(!c) return;
+  const btn = document.getElementById('pdfBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Generando...';
+  btn.disabled = true;
+  document.body.classList.add('pdf-export');
+  const el = document.getElementById('detail');
+  const filename = `ficha-${(c.nombre||'cliente').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')}.pdf`;
+  const opt = {
+    margin: 10,
+    filename,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
+  try{
+    await html2pdf().set(opt).from(el).save();
+  }catch(err){
+    showToast('No se pudo generar el PDF: ' + err.message);
+  }finally{
+    document.body.classList.remove('pdf-export');
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 // ---------- INIT ----------
