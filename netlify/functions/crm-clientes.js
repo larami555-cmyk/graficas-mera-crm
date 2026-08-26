@@ -37,7 +37,7 @@ exports.handler = async (event) => {
 
     if (event.httpMethod === 'POST') {
       const c = Object.assign({
-        nombre: '', localidad: '', direccion: '', telefono: '', web: '', redes: '',
+        nombre: '', localidad: '', direccion: '', telefono: '', email: '', web: '', redes: '',
         tipoNegocio: '', potencialGlobal: '', prioridad: '',
         numeroEmpleados: '', numeroVehiculos: '',
         proveedorActual: [], productosDetectados: [], categorias: [], servicios: [],
