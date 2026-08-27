@@ -137,8 +137,8 @@
   .modal .modalSub{font-size:12.5px;color:var(--paper-dim);margin-bottom:20px;}
   .modal .fld{margin-bottom:13px;}
   .modal .fld label{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:5px;}
-  .modal .fld input{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:9px 11px;color:var(--paper);font-family:'Inter',sans-serif;font-size:13.5px;}
-  .modal .fld input:focus{outline:none;border-color:var(--ink-dim);}
+  .modal .fld input, .modal .fld textarea{width:100%;background:var(--steel-850);border:1px solid var(--line);border-radius:3px;padding:9px 11px;color:var(--paper);font-family:'Inter',sans-serif;font-size:13.5px;resize:vertical;min-height:38px;}
+  .modal .fld input:focus, .modal .fld textarea:focus{outline:none;border-color:var(--ink-dim);}
   .modalBtns{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
 
   #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--steel-800);border:1px solid var(--ink-dim);color:var(--paper);
@@ -261,6 +261,18 @@
     <div class="modalBtns">
       <button class="action" onclick="closeModal()">Cancelar</button>
       <button class="action primary" onclick="submitNewClient()">Crear ficha</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pdfPreviewOverlay">
+  <div class="modal" style="max-width:600px;">
+    <h3>Repasar antes de generar el PDF</h3>
+    <div class="modalSub">Corrige lo que haga falta. Se guardará en la ficha y luego se generará el PDF.</div>
+    <div id="pdfPreviewFields"></div>
+    <div class="modalBtns">
+      <button class="action" onclick="closePdfPreview()">Cancelar</button>
+      <button class="action primary" id="pdfPreviewConfirmBtn" onclick="confirmarYGenerarPDF()">Generar PDF</button>
     </div>
   </div>
 </div>
@@ -533,7 +545,7 @@ function renderDetail(){
       <div class="btnRow">
         <button class="action primary" id="investigarBtn" onclick="investigarCliente('${c.id}')">🔎 Investigar cliente</button>
         <button class="action" onclick="window.print()">🖨 Imprimir ficha</button>
-        <button class="action" id="pdfBtn" onclick="descargarPDF('${c.id}')">⬇ Descargar PDF</button>
+        <button class="action" id="pdfBtn" onclick="abrirVistaPreviaPDF('${c.id}')">⬇ Descargar PDF</button>
         <button class="action danger" onclick="deleteClient('${c.id}')">Eliminar</button>
       </div>
     </div>
@@ -638,6 +650,83 @@ function exportarClientes(){
   showToast('Copia de clientes descargada.');
 }
 
+// ---------- VISTA PREVIA / EDICIÓN ANTES DE PDF ----------
+const PDF_PREVIEW_FIELDS = [
+  { key:'nombre', label:'Nombre correcto' },
+  { key:'localidad', label:'Localidad' },
+  { key:'direccion', label:'Dirección' },
+  { key:'telefono', label:'Teléfono' },
+  { key:'email', label:'Email' },
+  { key:'web', label:'Web' },
+  { key:'redes', label:'Redes públicas' },
+  { key:'tipoNegocio', label:'Tipo de negocio / actividad', multiline:true },
+  { key:'servicios', label:'Servicios propios del cliente', isArray:true },
+  { key:'novedades', label:'Noticias / novedades', multiline:true },
+  { key:'numeroEmpleados', label:'Nº de empleados' },
+  { key:'numeroVehiculos', label:'Nº de vehículos de flota' },
+  { key:'ultimaVisita', label:'Última visita' },
+  { key:'proximoSeguimiento', label:'Próximo seguimiento' },
+  { key:'observaciones', label:'Observaciones', multiline:true }
+];
+let pdfPreviewClientId = null;
+
+function abrirVistaPreviaPDF(clientId){
+  const c = getClient(clientId);
+  if(!c) return;
+  pdfPreviewClientId = clientId;
+  const wrap = document.getElementById('pdfPreviewFields');
+  wrap.innerHTML = PDF_PREVIEW_FIELDS.map(f=>{
+    const raw = f.isArray ? (c[f.key]||[]).join(', ') : (c[f.key]||'');
+    const tag = f.multiline
+      ? `<textarea id="pdfp_${f.key}" oninput="autoGrow(this)">${escapeHtml(raw)}</textarea>`
+      : `<input id="pdfp_${f.key}" value="${escapeHtml(raw)}">`;
+    return `<div class="fld"><label>${f.label}</label>${tag}</div>`;
+  }).join('');
+  document.getElementById('pdfPreviewOverlay').classList.add('show');
+  setTimeout(()=>{
+    wrap.querySelectorAll('textarea').forEach(autoGrow);
+  }, 30);
+}
+function closePdfPreview(){
+  document.getElementById('pdfPreviewOverlay').classList.remove('show');
+  pdfPreviewClientId = null;
+}
+
+async function confirmarYGenerarPDF(){
+  if(!pdfPreviewClientId) return;
+  const c = getClient(pdfPreviewClientId);
+  if(!c) return;
+  const btn = document.getElementById('pdfPreviewConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  const patch = {};
+  PDF_PREVIEW_FIELDS.forEach(f=>{
+    const el = document.getElementById('pdfp_' + f.key);
+    if(!el) return;
+    const val = el.value.trim();
+    if(f.isArray){
+      c[f.key] = val ? val.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      patch[f.key] = c[f.key];
+    } else {
+      c[f.key] = val;
+      patch[f.key] = val;
+    }
+  });
+  try{
+    const data = await apiCall(FN_CLIENTES, 'PUT', { id: c.id, patch });
+    const idx = clients.findIndex(x=>x.id===c.id);
+    if(idx>-1) clients[idx] = data.cliente;
+  }catch(err){
+    showToast('No se pudo guardar antes del PDF: ' + err.message);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Generar PDF';
+  closePdfPreview();
+  renderDetail();
+  renderList();
+  await descargarPDF(c.id);
+}
+
 async function descargarPDF(clientId){
   const c = getClient(clientId);
   if(!c) return;
@@ -672,6 +761,7 @@ document.getElementById('newClientBtn').addEventListener('click', openModal);
 document.getElementById('exportBtn').addEventListener('click', exportarClientes);
 document.getElementById('searchInput').addEventListener('input', renderList);
 document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+document.getElementById('pdfPreviewOverlay').addEventListener('click', e=>{ if(e.target.id==='pdfPreviewOverlay') closePdfPreview(); });
 </script>
 </body>
 </html>
